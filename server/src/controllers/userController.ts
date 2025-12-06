@@ -4,7 +4,7 @@ export const getUsers = async () => {
   try {
     const users = await sql`
     SELECT * 
-    FROM users
+    FROM "User"
     ORDER BY id ASC`;
     return users.map((user) => {
       return {
@@ -21,7 +21,7 @@ export const getUsers = async () => {
 export const createUser = async ({ body }: any) => {
   try {
     await sql`
-    INSERT INTO users(name, email) 
+    INSERT INTO "User"(name, email) 
     VALUES (${body.name}, ${body.email})`;
     return `add user successfully`;
   } catch (err) {
@@ -32,7 +32,7 @@ export const createUser = async ({ body }: any) => {
 export const updataUserById = async ({ params, body }: any) => {
   try {
     await sql` 
-    UPDATE users 
+    UPDATE "User" 
     SET name = ${body.name}, email = ${body.email} 
     WHERE id = ${params.id}`;
     return "Update success!!!";
@@ -43,10 +43,12 @@ export const updataUserById = async ({ params, body }: any) => {
 export const deleteUserById = async ({ params }: any) => {
   try {
     await sql` 
-    DELETE FROM users
+    DELETE FROM "User"
     WHERE id = ${params.id}`;
     return "Delete success!!!";
   } catch (err) {
     return err;
   }
 };
+
+
