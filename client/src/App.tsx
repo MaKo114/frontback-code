@@ -1,32 +1,14 @@
-import { useEffect, useState } from 'react'
+import Login from "./pages/auth/Login"
+import Register from "./pages/auth/Register"
 
-import './App.css'
-import axios from 'axios';
-import Headers from './components/Headers';
+const App = () => {
 
-function App() {
-  const [user, setUser] = useState([])
-  // const [count, setCount] = useState()
 
-  const fetchData = async() => {
-    const res = await axios.get('http://localhost:8000/users')
-    setUser(res.data)
-  }
-
-  useEffect(()=>{
-    fetchData()
-  }, [])
 
   return (
-    <>
-    <Headers/>
-      {
-        user.map((item, index)=> {
-          return <div key={index}>
-          {item.email}</div>
-        })
-      }
-    </>
+    <div>
+      <Login/>
+    </div>
   )
 }
 

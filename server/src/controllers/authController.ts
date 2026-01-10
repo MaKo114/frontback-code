@@ -28,6 +28,7 @@ export const register = async ({ body, set }: any) => {
     INSERT INTO "User"(email, name, password)
     VALUES (${email}, ${name}, ${hashPassword})
     `;
+    set.status = 200
     return `Create Account successfully!!`;
   } catch (err) {
     console.log(err);
