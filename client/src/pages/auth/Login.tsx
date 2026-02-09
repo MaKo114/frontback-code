@@ -6,7 +6,10 @@ const Login = () => {
     document.title = "เข้าสู่ระบบ";
   }, []);
   
-  return <div>Login</div>;
+  return (
+  <div>
+    LOGIN
+  </div>)
 };
 
 export default Login;

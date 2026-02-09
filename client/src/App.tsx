@@ -1,5 +1,4 @@
-import Login from "./pages/auth/Login"
-import Register from "./pages/auth/Register"
+import AppRoutes from "./routes/AppRoutes"
 
 const App = () => {
 
@@ -7,7 +6,7 @@ const App = () => {
 
   return (
     <div>
-      <Login/>
+      <AppRoutes/>
     </div>
   )
 }

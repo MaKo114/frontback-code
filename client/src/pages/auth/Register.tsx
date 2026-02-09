@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import Login from "./Login";
+import { Link } from "react-router-dom";
 
 const Register = () => {
   
@@ -83,9 +85,9 @@ const Register = () => {
 
           <p className="text-center text-muted-foreground mt-4">
             เป็นสมาชิกอยู่แล้ว,{" "}
-            <a className="text-red-500 hover:underline font-medium">
+            <Link to={"/login"} className="text-red-500 hover:underline font-medium">
               เข้าสู่ระบบ
-            </a>
+            </Link>
           </p>
         </form>
       </div>
