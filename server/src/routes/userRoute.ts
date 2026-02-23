@@ -7,6 +7,7 @@ import {
 } from "../controllers/userController";
 import { login, register } from "../controllers/authController";
 import { adminCheck } from "../middleware/auth";
+import { createPost,getMyPosts } from "../controllers/PostController";
 
 export const useRoutes = new Elysia();
 
@@ -16,7 +17,8 @@ useRoutes.put("/update/:id", updataUserById, { beforeHandle: adminCheck });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: adminCheck });
 useRoutes.post("/register", register);
 useRoutes.post("/login", login);
-
+useRoutes.post("/testpost", createPost);
+useRoutes.get("/getpost", getMyPosts);
 // useRoutes.post("/auth", authCheck);
 
 
