@@ -1,12 +1,26 @@
 import sql from "../../db";
-
+import { strictBody } from "../utils/validate";
 export const register = async ({ body, set }: any) => {
   try {
-    const { email, name, password } = body;
+    const allowed = ["email", "first_name", "last_name", "password"];
+    const required = ["email", "first_name", "last_name", "password"];
 
-    if (!email || !password) {
-      set.status = 404;
-      return "please input email and password";
+    const v = strictBody(body, allowed, required);
+    if (!v.ok) {
+      set.status = 400;
+      return v.error;
+    }
+
+    const { email, first_name, last_name, password } = body;
+
+    const foundEmail = await sql`
+      SELECT student_id FROM "User"
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+    if (foundEmail.length > 0) {
+      set.status = 409;
+      return `${email} is already exist.`;
     }
 
     const hashPassword = await Bun.password.hash(password, {
@@ -14,70 +28,69 @@ export const register = async ({ body, set }: any) => {
       cost: 10,
     });
 
-    const foundEmail = await sql`
-    SELECT email FROM "User"
-    WHERE email = ${email}
-    `;
-
-    if (foundEmail.length > 0) {
-      set.status = 401;
-      return `${email} is already exist.`;
-    }
-
     await sql`
-    INSERT INTO "User"(email, name, password)
-    VALUES (${email}, ${name}, ${hashPassword})
+      INSERT INTO "User"(email, first_name, last_name, password)
+      VALUES (${email}, ${first_name}, ${last_name}, ${hashPassword})
     `;
-    set.status = 200
+
+    set.status = 201;
     return `Create Account successfully!!`;
   } catch (err) {
     console.log(err);
+    set.status = 500;
+    return "Error registering.";
   }
 };
 
 export const login = async ({ body, set, jwt }: any) => {
   try {
-    const { email, password } = body; // รับ email password จากหน้าบ้าน
+    const allowed = ["email", "password"];
+    const required = ["email", "password"];
 
-    if (!email || !password) {
-      // เช็คว่าได้ใส่ email หรือ password ไหม ถ้าไม่ได้ใส่มาให้ return ออกไปเลย
+    const v = strictBody(body, allowed, required);
+    if (!v.ok) {
       set.status = 400;
-      return `please input your email and password`;
+      return v.error;
     }
 
-    const user = await sql` 
-    SELECT id, email, password, role FROM "User"
-    WHERE email = ${email}
-    `; // หา user ใน DB มันจะ return เป็น array
+    const { email, password } = body;
+
+    const user = await sql`
+      SELECT student_id, email, password, role, status
+      FROM "User"
+      WHERE email = ${email}
+      LIMIT 1
+    `;
 
     if (user.length === 0) {
-      // ถ้าเช็คแล้ว array มีความยาวเท่า 0 return ออกไปเลย
       set.status = 404;
       return `User not found`;
     }
 
-    const isMatch = await Bun.password.verify(password, user[0].password); // เช็คว่า password ที่กรอกเข้ามากับ password ที่เข้ารหัสแล้ว ตรงกันไหม
+    if (user[0].status !== "ACTIVE") {
+      set.status = 403;
+      return `Account is ${user[0].status}`;
+    }
 
+    const isMatch = await Bun.password.verify(password, user[0].password);
     if (!isMatch) {
-      // ถ้า isMatch เป็น false ให้ return ออกไปเลย
       set.status = 401;
       return `password not match`;
     }
 
     const payLoad = {
-      // สร้าง payload มา
-      id: user[0].id,
+      student_id: user[0].student_id,
       email: user[0].email,
-      role: user[0].role, // role ต้องมาจาก db อันนี้ mockup ไว้
+      role: user[0].role,
     };
 
-    const token = await jwt.sign(payLoad); // สร้าง token
+    const token = await jwt.sign(payLoad);
 
     set.status = 200;
-    return { payload: payLoad, token: token }; // return payload กับ token ออกไปให้ frontend ใช้ เพื่อเอาไว้เช็ค middleware ได้ จะได้รู้ว่าใครมีสิทธิ์ เป็น user หรือ admin
+    return { payload: payLoad, token };
   } catch (err) {
     console.error(err);
-    set.status = 500; // Internal Server Error
+    set.status = 500;
     return "Error logging in.";
   }
 };
