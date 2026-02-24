@@ -1,20 +1,19 @@
-import Elysia from "elysia";
-import {
-  createUser,
-  deleteUserById,
-  getUsers,
-  updataUserById,
-} from "../controllers/userController";
+// routes/userRoute.ts
+import { Elysia } from "elysia";
+import { createUser, deleteUserById, getUsers, updataUserById } from "../controllers/userController";
 import { login, register } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
 import { createPost, getMyPosts,editPost,deletePost } from "../controllers/PostController";
 import { getCategories, createCategory } from "../controllers/categoryController"; // ถ้าคุณเพิ่ม
 
-export const useRoutes = new Elysia();
-
-// ✅ Public
-useRoutes.post("/register", register);
-useRoutes.post("/login", login);
+export const useRoutes = (app: Elysia) =>
+  app
+    .get("/users", getUsers, { beforeHandle: adminCheck })
+    .post("/create", createUser, { beforeHandle: adminCheck })
+    .put("/update/:id", updataUserById, { beforeHandle: adminCheck })
+    .delete("/delete/:id", deleteUserById, { beforeHandle: adminCheck })
+    .post("/register", register)
+    .post("/login", login);
 
 // ✅ Authenticated (ต้องมี token)
 useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });

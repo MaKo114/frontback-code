@@ -1,21 +1,29 @@
-import { create } from 'zustand'
+import { create, type StateCreator } from "zustand";
+import type { loginForm } from "../interfaces/form";
+import axios, { type AxiosResponse } from "axios";
 
+// กำหนด type ของ store
 interface TestState {
-  token: string
-  actionLogin: (token: string) => void
+  token: string;
+  actionLogin: (form: loginForm) => Promise<AxiosResponse<any> | void>;
 }
 
-
-const testStore = (set:any) => ({
-  token: '',
-    actionLogin: (token: string) => {
-        localStorage.setItem('token', token)
-        set({token: token})
+// สร้าง store
+const testStore: StateCreator<TestState> = (set) => ({
+  token: "",
+  actionLogin: async (form: loginForm) => {
+    try{
+      const res = await axios.post("http://localhost:8000/login", form);
+      // เก็บ token ลง localStorage และอัปเดต state
+      localStorage.setItem("token", res.data.token);
+      set({ token: res.data.token });
+      return res
+    }catch(err){
+      console.log(err);
     }
-})
+  },
+});
 
-const useTestStore = create<TestState>(testStore)
-
-
-
+// hook สำหรับใช้งาน store
+const useTestStore = create<TestState>(testStore);
 export default useTestStore;
