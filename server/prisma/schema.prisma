@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -8,12 +8,146 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  name     String
-  password String
-  role     Role   @default(USER)
-  posttests Posttest[]
+  student_id Int        @id @default(autoincrement())
+  first_name String
+  last_name  String
+  email      String     @unique
+  password   String
+  status     UserStatus @default(ACTIVE)
+  role       Role       @default(USER)
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  // relations
+  posts        Post[]      @relation("UserPosts")
+  favorites    Favorite[]
+  reports      Report[]    @relation("UserReports")
+  sentMessages Message[]   @relation("UserMessages")
+
+  buyerChats   ChatRoom[]  @relation("ChatBuyer")
+  sellerChats  ChatRoom[]  @relation("ChatSeller")
+
+  ownerExchanges   Exchange[] @relation("ExchangeOwner")
+  receiverExchanges Exchange[] @relation("ExchangeReceiver")
+}
+
+model Post {
+  post_id     Int        @id @default(autoincrement())
+  student_id  Int
+  title       String
+  description String?
+  status      PostStatus @default(OPEN)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  // relations
+  user         User          @relation("UserPosts", fields: [student_id], references: [student_id])
+  categories   PostCategory[]
+  favorites    Favorite[]
+  images       PostImage[]
+  reports      Report[]
+  chatRooms    ChatRoom[]
+  exchanges    Exchange[]
+}
+
+model Category {
+  category_id   Int      @id @default(autoincrement())
+  category_name String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  posts PostCategory[]
+}
+
+model PostCategory {
+  category_id Int
+  post_id     Int
+
+  category Category @relation(fields: [category_id], references: [category_id])
+  post     Post     @relation(fields: [post_id], references: [post_id])
+
+  @@id([category_id, post_id])
+  @@map("post_category")
+}
+
+model Favorite {
+  user_id Int
+  post_id Int
+
+  user User @relation(fields: [user_id], references: [student_id])
+  post Post @relation(fields: [post_id], references: [post_id])
+
+  @@id([user_id, post_id])
+  @@map("favorite")
+}
+
+model PostImage {
+  image_id  Int    @id @default(autoincrement())
+  post_id   Int
+  image_url String
+
+  post Post @relation(fields: [post_id], references: [post_id])
+
+  @@map("post_image")
+}
+
+model Report {
+  report_id    Int      @id @default(autoincrement())
+  post_id      Int
+  reporter_id  Int
+  text         String
+  created_at   DateTime @default(now())
+
+  post     Post @relation(fields: [post_id], references: [post_id])
+  reporter User @relation("UserReports", fields: [reporter_id], references: [student_id])
+
+  @@map("report")
+}
+
+model ChatRoom {
+  chat_id          Int      @id @default(autoincrement())
+  post_id          Int
+  buyer_id         Int
+  seller_id        Int
+  created_at       DateTime @default(now())
+  last_message_at  DateTime?
+
+  post   Post @relation(fields: [post_id], references: [post_id])
+  buyer  User @relation("ChatBuyer", fields: [buyer_id], references: [student_id])
+  seller User @relation("ChatSeller", fields: [seller_id], references: [student_id])
+
+  messages Message[]
+
+  @@map("chat_room")
+}
+
+model Message {
+  message_id  Int      @id @default(autoincrement())
+  chat_id     Int
+  sender_id   Int
+  text        String
+  created_at  DateTime @default(now())
+
+  chat   ChatRoom @relation(fields: [chat_id], references: [chat_id])
+  sender User     @relation("UserMessages", fields: [sender_id], references: [student_id])
+
+  @@map("message")
+}
+
+model Exchange {
+  exchange_id       Int            @id @default(autoincrement())
+  post_id           Int
+  owner_id          Int
+  receiver_id       Int
+  status            ExchangeStatus @default(PENDING)
+  owner_confirm     Boolean        @default(false)
+  receiver_confirm  Boolean        @default(false)
+
+  post     Post @relation(fields: [post_id], references: [post_id])
+  owner    User @relation("ExchangeOwner", fields: [owner_id], references: [student_id])
+  receiver User @relation("ExchangeReceiver", fields: [receiver_id], references: [student_id])
+
+  @@map("exchange")
 }
 
 enum Role {
@@ -21,19 +155,21 @@ enum Role {
   USER
 }
 
-model Posttest {
-  post_id     Int @id @default(autoincrement())
-  student_id  Int
-  category_id String
-  title       String
-  description String?
-  status      Post_status @default(OPEN)
-  created_at  DateTime   @default(now())
-  updated_at  DateTime   @updatedAt //คือทุกครั้งที่เปลี่ยนข้อมูล
-  user       User     @relation(fields: [student_id], references: [id])
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
 }
 
-enum Post_status{
+enum PostStatus {
   OPEN
   CLOSED
+}
+
+enum ExchangeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELED
 }

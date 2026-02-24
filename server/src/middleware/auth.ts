@@ -1,62 +1,66 @@
 import sql from "../../db";
 
-export const authCheck = async ({ headers, jwt, set }: any) => {
+export const authCheck = async (ctx: any) => {
   try {
-    const headerToken = headers.authorization;
+    const { headers, jwt, set } = ctx;
+    const auth = headers.authorization;
 
-    if (!headerToken || !headerToken.startsWith("Bearer ")) {
-      // เช็คว่า user ได้ส่ง token มาไหม หรือ ส่งมาแต่ไม่ได้เริ่มด้วย Bearer ให้ return ออกไป
+    if (!auth || !auth.startsWith("Bearer ")) {
       set.status = 401;
-      return { user: null, error: "No or Invalid Token" };
+      return "No or Invalid Token";
     }
 
-    const token = headers.authorization.split(" ")[1]; //
+    const token = auth.split(" ")[1];
     const decode = await jwt.verify(token);
 
-    if (!decode) {
+    if (!decode || !decode.email) {
       set.status = 401;
-      return { user: null, error: "Invalid Token" };
+      return "Invalid Token";
     }
 
-    const user = await sql`
-    select email from "User"
-    where email = ${decode.email}
+    const rows = await sql`
+      SELECT student_id, email, role, status, first_name, last_name
+      FROM "User"
+      WHERE email = ${decode.email}
+      LIMIT 1
     `;
 
-    if (user.length === 0) {
+    if (rows.length === 0) {
       set.status = 403;
-      return { user: null, error: "This account cannot access" };
+      return "This account cannot access";
     }
 
-    return { user: decode };
+    const dbUser = rows[0];
+
+    if (dbUser.status !== "ACTIVE") {
+      set.status = 403;
+      return `Account is ${dbUser.status}`;
+    }
+
+    // ✅ สำคัญ: set ลง ctx
+    ctx.user = {
+      student_id: dbUser.student_id,
+      email: dbUser.email,
+      role: dbUser.role,
+      first_name: dbUser.first_name,
+      last_name: dbUser.last_name,
+    };
+
+    return; // ผ่าน
   } catch (err) {
     console.error("authCheck error:", err);
-    set.status = 500;
-    return { user: null, error: "Authentication failed" };
+    ctx.set.status = 500;
+    return "Authentication failed";
   }
 };
 
-
-export const adminCheck = async ({user, set}:any) => {
-    if (!user) {
-        set.status = 401
-        return `Unauthorized`
-    }
-    if (user.role !== "ADMIN") {
-        set.status = 403
-        return `Forbidden`
-    }
-}
-
-
-
-// const check = ({ user, set }: any) => {
-//   if (!user) {
-//     set.status = 401;
-//     return "Unauthorized";
-//   }
-//   if (user.role !== "ADMIN") {
-//     set.status = 403;
-//     return "Forbidden";
-//   }
-// };
+export const adminCheck = async ({ user, set }: any) => {
+  if (!user) {
+    set.status = 401;
+    return "Unauthorized";
+  }
+  if (user.role !== "ADMIN") {
+    set.status = 403;
+    return "Forbidden";
+  }
+};

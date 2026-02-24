@@ -6,30 +6,28 @@ import {
   updataUserById,
 } from "../controllers/userController";
 import { login, register } from "../controllers/authController";
-import { adminCheck } from "../middleware/auth";
-import { createPost,getMyPosts } from "../controllers/PostController";
+import { authCheck, adminCheck } from "../middleware/auth";
+import { createPost, getMyPosts,editPost,deletePost } from "../controllers/PostController";
+import { getCategories, createCategory } from "../controllers/categoryController"; // ถ้าคุณเพิ่ม
 
 export const useRoutes = new Elysia();
 
-useRoutes.get("/users", getUsers, { beforeHandle: adminCheck });
-useRoutes.post("/create", createUser, { beforeHandle: adminCheck });
-useRoutes.put("/update/:id", updataUserById, { beforeHandle: adminCheck });
-useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: adminCheck });
+// ✅ Public
 useRoutes.post("/register", register);
 useRoutes.post("/login", login);
-useRoutes.post("/testpost", createPost);
-useRoutes.get("/getpost", getMyPosts);
-// useRoutes.post("/auth", authCheck);
 
+// ✅ Authenticated (ต้องมี token)
+useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });
+useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
+useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
+useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
 
-// ใช้ group สำหรับ middleware ที่ใช้เหมือนกัน
-//   .group("/admin", app =>
-//     app
-//       .onBeforeHandle(adminCheck) // ✅ ใช้กับทุก route ใน group
-//       .get("/users", getUsers)
-//       .post("/create", createUser)
-//       .put("/update/:id", updataUserById)
-//       .delete("/delete/:id", deleteUserById)
-//   )
-//   .post("/register", register)
-//   .post("/login", login);
+// ✅ Categories
+useRoutes.get("/categories", getCategories);
+useRoutes.post("/categories", createCategory, { beforeHandle: [authCheck, adminCheck] });
+
+// ✅ Admin routes (ต้อง auth ก่อน แล้วค่อยเช็ค admin)
+useRoutes.get("/users", getUsers, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });
