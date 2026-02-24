@@ -31,13 +31,13 @@ const Navbar = () => {
             </button>
 
             {/* Person icon with dropdown */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition">
                   <User size={18} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-popover">
+              <DropdownMenuContent align="end" className="w-48 bg-popover" >
                 <DropdownMenuItem
                   onClick={() => navigate("/my-posts")}
                   className="cursor-pointer gap-2"

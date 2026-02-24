@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Camera } from "lucide-react";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 
 const EditProfile = () => {
+  const [preview, setPreview] = useState(null);
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "นมศักดิ์ มาโล",
@@ -14,6 +15,20 @@ const EditProfile = () => {
     phone: "081-234-5678",
     password: "",
   });
+
+  const fileInputRef = useRef(null);
+
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+      // ตรงนี้เอาไปทำ preview หรือ upload backend ได้เลย
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -26,7 +41,6 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-
       <div className="mx-auto max-w-2xl">
         {/* Cover photo editable */}
         <div className="relative h-36 bg-gradient-to-r from-amber-300 to-orange-300">
@@ -40,12 +54,30 @@ const EditProfile = () => {
         <div className="relative -mt-10 flex justify-center">
           <div className="relative">
             <Avatar className="h-20 w-20 border-4 border-background shadow-md">
-              <AvatarFallback className="bg-muted text-muted-foreground">
-                <User size={36} />
-              </AvatarFallback>
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="avatar"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  <User size={36} />
+                </AvatarFallback>
+              )}
             </Avatar>
-            <button className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm hover:bg-amber-500 transition">
+            <button
+              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-white shadow-sm hover:bg-amber-500 transition"
+              onClick={handleClick}
+            >
               <Camera size={14} />
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </button>
           </div>
         </div>
