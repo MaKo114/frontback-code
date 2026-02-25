@@ -94,3 +94,43 @@ export const login = async ({ body, set, jwt }: any) => {
     return "Error logging in.";
   }
 };
+
+export const requireUser = async ({ jwt, set }: any) => {
+  try {
+    if (!jwt) {
+      set.status = 401;
+      return { message: "Unauthorized" };
+    }
+
+    const user = await sql`
+      SELECT student_id, first_name, last_name, email, role
+      FROM "User"
+      WHERE student_id = ${jwt.student_id}
+      LIMIT 1
+    `;
+
+    if (user.length === 0) {
+      set.status = 404;
+      return { message: "User not found" };
+    }
+
+    set.status = 200;
+    return user[0];
+  } catch (err) {
+    console.log(err);
+    set.status = 500;
+    return { message: "Something went wrong" };
+  }
+};
+
+export const requireAdmin = async ({ jwt, set }: any) => {
+  if (!jwt) {
+    set.status = 401;
+    return { message: "Unauthorized" };
+  }
+
+  if (jwt.role !== "ADMIN") {
+    set.status = 403;
+    return { message: "Forbidden" };
+  }
+};

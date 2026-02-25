@@ -12,11 +12,11 @@ import { useNavigate } from "react-router-dom";
 
 
 const NavbarAdmin = () => {
-  const [activeMenu, setActiveMenu] = useState("รายงาน");
+  const [activeMenu, setActiveMenu] = useState("โพสต์ทั้งหมด");
   const navigate = useNavigate()
 
 const menuItems = [
-  { name: "โพสต์ทั้งหมด", icon: FileText, path: "/admin/posts" },
+  { name: "โพสต์ทั้งหมด", icon: FileText, path: "/admin" },
   { name: "รายงาน", icon: Flag, path: "/admin/reports" },
   { name: "หมวดหมู่", icon: FolderOpen, path: "/admin/categories" },
   { name: "ผู้ใช้", icon: Users, path: "/admin/users" },

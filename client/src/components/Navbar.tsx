@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Home, Bell, MessageCircle, User, Pencil } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,13 +20,13 @@ const Navbar = () => {
           <span className="text-lg font-bold text-white">Home page</span>
           
           <div className="flex items-center gap-3">
-            <Link to="/home" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition">
+            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition" onClick={()=>navigate("/user")}>
               <Home size={18} />
-            </Link>
+            </button>
             <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition">
               <Bell size={18} />
             </button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition">
+            <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm hover:bg-white transition" onClick={()=>navigate("chat")}>
               <MessageCircle size={18} />
             </button>
 
