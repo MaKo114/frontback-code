@@ -7,7 +7,7 @@ import {
 } from "../controllers/userController";
 import { login, register } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts,editPost,deletePost } from "../controllers/PostController";
+import { createPost, getMyPosts,editPost,deletePost,changePostStatus } from "../controllers/PostController";
 import { getCategories, createCategory } from "../controllers/categoryController"; // ถ้าคุณเพิ่ม
 
 export const useRoutes = new Elysia();
@@ -21,6 +21,7 @@ useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
 useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
+useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
 
 // ✅ Categories
 useRoutes.get("/categories", getCategories);
