@@ -77,7 +77,7 @@ export const login = async ({ body, set, jwt }: any) => {
       set.status = 401;
       return `password not match`;
     }
-
+    
     const payLoad = {
       student_id: user[0].student_id,
       email: user[0].email,

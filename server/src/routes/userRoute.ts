@@ -21,6 +21,7 @@ useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
 useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
+useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
 
 useRoutes.get("/categories", getCategories);
 useRoutes.post("/categories", createCategory, { beforeHandle: [authCheck, adminCheck] });

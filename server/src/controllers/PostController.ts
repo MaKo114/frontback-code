@@ -280,6 +280,79 @@ export const editPost = async ({ params, body, user, set }: any) => {
     return { error: err.message };
   }
 };
+
+export const changePostStatus = async ({ params, body, user, set }: any) => {
+  try {
+    if (!user || !user.student_id) {
+      set.status = 401;
+      return { error: "Please login first" };
+    }
+
+    const post_id = Number(params.post_id ?? params.id);
+    if (!post_id || Number.isNaN(post_id)) {
+      set.status = 400;
+      return { error: "invalid post_id" };
+    }
+
+    // strict body
+    const allowed = ["status"];
+    const required = ["status"];
+    const v = strictBody(body, allowed, required);
+    if (!v.ok) {
+      set.status = 400;
+      return { error: v.error };
+    }
+
+    const { status } = body;
+    const allowedStatus = ["OPEN", "CLOSED"];
+    if (!allowedStatus.includes(status)) {
+      set.status = 400;
+      return { error: `status must be one of: ${allowedStatus.join(", ")}` };
+    }
+
+    const result = await sql.begin(async (tx: any) => {
+      // 1) check post exists
+      const found = await tx`
+        SELECT post_id, student_id
+        FROM "Post"
+        WHERE post_id = ${post_id}
+        LIMIT 1
+      `;
+      if (found.length === 0) {
+        set.status = 404;
+        return { error: "Post not found" };
+      }
+
+      // 2) auth: owner or admin
+      const owner_id = found[0].student_id;
+      const isOwner = owner_id === user.student_id;
+      const isAdmin = user.role === "ADMIN";
+      if (!isOwner && !isAdmin) {
+        set.status = 403;
+        return { error: "Forbidden" };
+      }
+
+      // 3) update status (+ updated_at)
+      const updated = await tx`
+        UPDATE "Post"
+        SET status = ${status}, updated_at = NOW()
+        WHERE post_id = ${post_id}
+        RETURNING post_id, status, updated_at
+      `;
+
+      return { message: "Post status updated", data: updated[0] };
+    });
+
+    if (result?.error) return result;
+
+    set.status = 200;
+    return result;
+  } catch (err: any) {
+    console.error("changePostStatus error:", err);
+    set.status = 500;
+    return { error: err.message };
+  }
+};
 export const deletePost = async ({ params, user, set }: any) => {
   try {
     if (!user || !user.student_id) {
