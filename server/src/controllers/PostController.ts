@@ -87,36 +87,37 @@ export const getMyPosts = async ({ user, set }: any) => {
 
     const posts = await sql`
       SELECT 
-        p.post_id,
-        p.student_id,
-        p.title,
-        p.description,
-        p.status,
-        c.category_id,
-        c.category_name,
+  p.post_id,
+  p.student_id,
+  u.first_name,
+  u.last_name,
+  p.title,
+  p.description,
+  p.status,
 
-        TO_CHAR(
-          p.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Bangkok',
-          'DD/MM/YYYY HH24:MI:SS'
-        ) AS created_at_th,
+  TO_CHAR(
+    p.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Bangkok',
+    'DD/MM/YYYY HH24:MI:SS'
+  ) AS created_at_th,
 
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'image_id', pi.image_id,
-              'image_url', pi.image_url
-            )
-          ) FILTER (WHERE pi.image_id IS NOT NULL),
-          '[]'::json
-        ) AS images
+  COALESCE(
+    (
+      SELECT json_agg(
+        jsonb_build_object(
+          'image_id', pi.image_id,
+          'image_url', pi.image_url
+        )
+      )
+      FROM "post_image" pi
+      WHERE pi.post_id = p.post_id
+    ),
+    '[]'
+  ) AS images
 
-      FROM "Post" p
-      LEFT JOIN "post_category" pc ON pc.post_id = p.post_id
-      LEFT JOIN "Category" c ON c.category_id = pc.category_id
-      LEFT JOIN "post_image" pi ON pi.post_id = p.post_id
-      WHERE p.student_id = ${user.student_id}
-      GROUP BY p.post_id, c.category_id
-      ORDER BY p.created_at DESC
+FROM "Post" p
+JOIN "User" u ON u.student_id = p.student_id
+WHERE p.student_id = ${user.student_id}
+ORDER BY p.created_at DESC
     `;
 
     return { data: posts };
@@ -139,15 +140,27 @@ export const editPost = async ({ params, body, user, set }: any) => {
     }
 
     // strict: ขาดไม่ได้ เกินไม่ได้
-    const allowed = ["category_id", "title", "description","status", "image_urls"];
-    const required = ["category_id", "title", "description","status", "image_urls"];
+    const allowed = [
+      "category_id",
+      "title",
+      "description",
+      "status",
+      "image_urls",
+    ];
+    const required = [
+      "category_id",
+      "title",
+      "description",
+      "status",
+      "image_urls",
+    ];
     const v = strictBody(body, allowed, required);
     if (!v.ok) {
       set.status = 400;
       return { error: v.error };
     }
 
-    const { category_id, title, description,status, image_urls } = body;
+    const { category_id, title, description, status, image_urls } = body;
 
     if (!Array.isArray(image_urls) || image_urls.length === 0) {
       set.status = 400;
