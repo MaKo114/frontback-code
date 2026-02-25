@@ -1,16 +1,12 @@
-import { useState } from "react";
-import {
-  User,
-  Search,
-  Heart,
-  MoreHorizontal,
-  Pencil,
-  Grid2x2,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Search, Heart, Pencil, Grid2x2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import Title from "../../titles/Title";
 import PostDialog from "@/components/posts/PostDialog";
 import MoreDot from "@/components/posts/MoreDot";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import useTestStore from "@/store/tokStore";
 
 const categories = [
   "ทั้งหมด",
@@ -22,53 +18,45 @@ const categories = [
   "บรรจุภัณฑ์",
 ];
 
-const mockPosts = [
-  {
-    id: 1,
-    author: "นมศักดิ์ มาโล",
-    date: "20 มกราคม 2569 เวลา 15:42 น.",
-    content:
-      "ค่าเลลหมิ๊มครั้ง อยากเช่นน้าแนน อยากค่ายลลลอะจะไร้กืๆครั้ง ให้หมอนมอง สนใจทักแชทมาก็ได้",
-    liked: true,
-    images: 4,
-  },
-  {
-    id: 2,
-    author: "นมศักดิ์ มาโล",
-    date: "20 มกราคม 2569 เวลา 15:42 น.",
-    content:
-      "ค่าเลลหมิ๊มครั้ง อยากเช่นน้าแนน อยากค่ายลลลอะจะไร้กืๆครั้ง ให้หมอนมอง สนใจทักแชทมาก็ได้",
-    liked: false,
-    images: 4,
-  },
-];
-
 const HomePage = () => {
   const [activeCategory, setActiveCategory] = useState("ทั้งหมด");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState([]);
+  const navigate = useNavigate();
+  const token: any = useTestStore((s) => s.token);
 
-  const toggleLiked = (id: any) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === id ? { ...post, liked: !post.liked } : post,
-      ),
-    );
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/getpost", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setPosts(res.data.data);
+      console.log(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleCreatePost = (title: string, description: string) => {
     const newPost = {
       id: Date.now(),
-      author: "นมศักดิ์ มาโล",
-      date: new Date().toLocaleString("th-TH"),
+      title,
       content: description,
-      liked: false,
-      images: 0,
+      createdAt: new Date().toISOString(),
+      images: [],
     };
 
     setPosts((prev) => [newPost, ...prev]);
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,11 +105,10 @@ const HomePage = () => {
             />
           </div>
 
-          {/* Posts */}
           <div className="space-y-6">
-            {posts.map((post) => (
+            {posts.map((post: any) => (
               <div
-                key={post.id}
+                key={post.post_id}
                 className="rounded-xl border border-input bg-card p-4 shadow-sm"
               >
                 {/* Post header */}
@@ -134,41 +121,47 @@ const HomePage = () => {
                     </Avatar>
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        {post.author}
+                        {`${post.first_name} ${post.last_name}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {post.date}
+                        {post.created_at_th}
                       </p>
                     </div>
                   </div>
 
-                  <MoreDot/>
-
-
+                  <MoreDot />
                 </div>
 
                 {/* Content */}
                 <p className="mb-3 text-sm text-foreground leading-relaxed">
-                  {post.content}
+                  {post.title} 
+                  {post.description}
                 </p>
 
-                <div className="mb-3 h-56 rounded-lg bg-amber-100" />
+                {/* Images */}
+                {post.images?.length > 0 && (
+                  <div className="mb-3 h-56 rounded-lg overflow-hidden">
+                    {post.images.map((img: any) => (
+                      <img
+                        key={img.image_id}
+                        src={img.image_url}
+                        alt=""
+                        className="h-full w-full object-cover rounded-lg mb-2"
+                      />
+                    ))}
+                  </div>
+                )}
 
+                {/* Footer */}
                 <div className="flex items-center gap-3">
-                  <button
-                    className="transition hover:scale-110"
-                    onClick={() => toggleLiked(post.id)}
-                  >
-                    <Heart
-                      size={22}
-                      className={
-                        post.liked
-                          ? "fill-red-500 text-red-500"
-                          : "text-muted-foreground"
-                      }
-                    />
+                  <button className="transition hover:scale-110">
+                    <Heart size={22} className="text-muted-foreground" />
                   </button>
-                  <button className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-amber-500 transition">
+
+                  <button
+                    className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-amber-500 transition"
+                    onClick={() => navigate("chat")}
+                  >
                     แชท
                   </button>
                 </div>
@@ -192,9 +185,77 @@ const HomePage = () => {
         onOpenChange={setIsPostDialogOpen}
         onCreatePost={handleCreatePost}
       />
-
-
     </div>
   );
 };
 export default HomePage;
+
+// <div className="space-y-6">
+//   {posts.map((post) => (
+//     <div
+//       key={post.id}
+//       className="rounded-xl border border-input bg-card p-4 shadow-sm"
+//     >
+//       {/* Post header */}
+//       <div className="mb-3 flex items-center justify-between">
+//         <div className="flex items-center gap-3">
+//           <Avatar className="h-10 w-10 border-2 border-muted">
+//             <AvatarFallback className="bg-muted text-muted-foreground">
+//               <User size={20} />
+//             </AvatarFallback>
+//           </Avatar>
+//           <div>
+//             <p className="text-sm font-semibold text-foreground">
+//               {post.title}
+//             </p>
+//             <p className="text-xs text-muted-foreground">
+//               {post.date}
+//             </p>
+//           </div>
+//         </div>
+
+//         <MoreDot />
+//       </div>
+
+//       {/* Content */}
+//       <p className="mb-3 text-sm text-foreground leading-relaxed">
+//         {post.content}
+//       </p>
+
+//       <div className="mb-3 h-56 rounded-lg bg-amber-100">
+//         {Array.isArray(post.images) &&
+//           post.images.map((img) => (
+//             <div key={img.image_id}>
+//               <img
+//                 src={img.image_url}
+//                 alt=""
+//                 className="h-full w-full object-cover rounded-lg"
+//               />
+//             </div>
+//           ))}
+//       </div>
+
+//       <div className="flex items-center gap-3">
+//         <button
+//           className="transition hover:scale-110"
+//           // onClick={() => toggleLiked(post.id)}
+//         >
+//           <Heart
+//             size={22}
+//             className={
+//               post.liked
+//                 ? "fill-red-500 text-red-500"
+//                 : "text-muted-foreground"
+//             }
+//           />
+//         </button>
+//         <button
+//           className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-amber-500 transition"
+//           onClick={() => navigate("/chat")}
+//         >
+//           แชท
+//         </button>
+//       </div>
+//     </div>
+//   ))}
+// </div>

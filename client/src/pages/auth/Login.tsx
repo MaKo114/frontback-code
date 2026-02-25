@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { loginForm } from "../../interfaces/form";
-import useTestStore from "../../store/testStore";
+import useTestStore from "../../store/tokStore";
 import Title from "../../titles/Title";
 
 // https://img.freepik.com/free-vector/hand-drawn-business-communication-concept_23-2149140766.jpg?t=st=1769230982~exp=1769234582~hmac=8822c530fa44c0b9fb9027bb83bca487939f2b61da0053bbe9a1b1949442875d
 
 const Login = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const actionLogin = useTestStore((s) => s.actionLogin);
   const [form, setForm] = useState<loginForm>({
     email: "",
@@ -23,30 +23,28 @@ const Login = () => {
 
   const roleRedirect = (res: any) => {
     
-      const role = res.data.payload.role
+    const role = res.data.payload.role;
 
-      if (role === "ADMIN"){
-        navigate("/admin")
-      }
-      else{
-        navigate("/home")
-      }
-  }
+    if (role === "ADMIN") {
+      navigate("/admin");
+    } else {
+      navigate("/user");
+    }
+  };
 
-  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try{
-      const res = await actionLogin(form)
-      roleRedirect(res)
-      
-    }catch(err){
+    try {
+      const res = await actionLogin(form);
+      roleRedirect(res);
+    } catch (err) {
       console.log(err);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <Title/>
+      <Title />
       {/* Card */}
       <div className="flex bg-white rounded-lg shadow-lg overflow-hidden max-w-6xl w-full">
         {/* Left side: Image */}
