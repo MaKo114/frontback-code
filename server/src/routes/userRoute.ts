@@ -7,10 +7,15 @@ import {
 } from "../controllers/userController";
 import { login, register, requireAdmin, requireUser } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts,editPost,deletePost } from "../controllers/PostController";
+import { createPost, getMyPosts,editPost,deletePost,changePostStatus } from "../controllers/PostController";
 import { getCategories, createCategory } from "../controllers/categoryController";
-
+import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
 export const useRoutes = new Elysia();
+
+useRoutes.post("/chat/room", createOrGetChatRoom, { beforeHandle: authCheck });
+useRoutes.get("/chat/rooms", getMyChatRooms, { beforeHandle: authCheck });
+useRoutes.get("/chat/rooms/:chat_id/messages", getMessagesByRoom, { beforeHandle: authCheck });
+useRoutes.post("/chat/rooms/:chat_id/messages", sendMessage, { beforeHandle: authCheck });
 
 useRoutes.post("/register", register);
 useRoutes.post("/login", login);
