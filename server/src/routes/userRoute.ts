@@ -7,7 +7,7 @@ import {
 } from "../controllers/userController";
 import { login, register, requireAdmin, requireUser } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts, editPost, deletePost } from "../controllers/PostController";
+import { createPost, getMyPosts, editPost, deletePost,changePostStatus } from "../controllers/PostController";
 import { getCategories, createCategory, deleteCategory, updateCategory } from "../controllers/categoryController";
 import {
   blockUser,
@@ -21,7 +21,13 @@ import {
   resolveReport,
 } from "../controllers/adminController";
 
+import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
 export const useRoutes = new Elysia();
+
+useRoutes.post("/chat/room", createOrGetChatRoom, { beforeHandle: authCheck });
+useRoutes.get("/chat/rooms", getMyChatRooms, { beforeHandle: authCheck });
+useRoutes.get("/chat/rooms/:chat_id/messages", getMessagesByRoom, { beforeHandle: authCheck });
+useRoutes.post("/chat/rooms/:chat_id/messages", sendMessage, { beforeHandle: authCheck });
 
 useRoutes.post("/register", register);
 useRoutes.post("/login", login);
@@ -32,6 +38,7 @@ useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
 useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
+useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
 
 useRoutes.get("/categories", getCategories);
 useRoutes.post("/categories", createCategory, { beforeHandle: [authCheck, adminCheck] });

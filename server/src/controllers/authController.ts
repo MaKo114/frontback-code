@@ -77,7 +77,7 @@ export const login = async ({ body, set, jwt }: any) => {
       set.status = 401;
       return `password not match`;
     }
-
+    
     const payLoad = {
       student_id: user[0].student_id,
       email: user[0].email,
@@ -123,13 +123,13 @@ export const requireUser = async ({ jwt, set }: any) => {
   }
 };
 
-export const requireAdmin = async ({ jwt, set }: any) => {
-  if (!jwt) {
+export const requireAdmin = async ({ user, set }: any) => {
+  if (!user) {
     set.status = 401;
     return { message: "Unauthorized" };
   }
 
-  if (jwt.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     set.status = 403;
     return { message: "Forbidden" };
   }
