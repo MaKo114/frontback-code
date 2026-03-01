@@ -22,11 +22,10 @@ const AdminCategories = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const res = await getCategories();
+      const res = await getCategories(token);
       setCategories(res.data.data);
     } catch (err) {
       console.error(err);
-      alert("ไม่สามารถดึงข้อมูลหมวดหมู่ได้");
     } finally {
       setIsLoading(false);
     }
