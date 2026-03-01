@@ -34,13 +34,11 @@ useRoutes.post("/login", login);
 useRoutes.post("/require-user", requireUser, { beforeHandle: authCheck });
 useRoutes.post("/require-admin", requireAdmin, { beforeHandle: [authCheck, adminCheck] });
 
-useRoutes.post("/creat-post", createPost, { beforeHandle: authCheck });
+useRoutes.post("/create-post", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.get("/get-all-post", getAllPost)
 
-
 useRoutes.post("/upload-image", createImage)
-
 
 useRoutes.get("/post-by-category/:category_id", getPostByCategory)
 useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });

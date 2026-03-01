@@ -6,10 +6,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import useTestStore from "@/store/tokStore";
 
 // rafce
 const Navbar = () => {
   const navigate = useNavigate();
+  const logOut = useTestStore((state)=> state.actionLogOut)
 
   return (
     <nav className="bg-background">
@@ -39,7 +41,7 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-popover" >
                 <DropdownMenuItem
-                  onClick={() => navigate("/my-posts")}
+                  onClick={() => navigate("my-posts")}
                   className="cursor-pointer gap-2"
                 >
                   <User size={16} />
@@ -53,7 +55,7 @@ const Navbar = () => {
                   <span>โพสต์ทั้งหมดของฉัน</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => navigate("/register")}
+                  onClick={() => {logOut(); navigate("/login"); }}
                   className="cursor-pointer gap-2 text-destructive"
                 >
                   <span>ออกจากระบบ</span>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus } from "lucide-react";
 import { useState } from "react";
-import { creatPost } from "@/api/post";
+import { createPost } from "@/api/post";
 import useTestStore from "@/store/tokStore";
 import { uploadFile } from "@/api/post";
 
@@ -33,76 +33,70 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
 
   /* ================= Upload Image ================= */
 
-const handleImageChange = async (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  if (!e.target.files || !token) return;
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !token) return;
 
-  const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files);
 
-  // ✅ 1. preview ทันที
-  const previewUrls = files.map((file) =>
-    URL.createObjectURL(file)
-  );
+    // ✅ 1. preview ทันที
+    const previewUrls = files.map((file) => URL.createObjectURL(file));
 
-  setPostForm((prev) => ({
-    ...prev,
-    image_urls: [...prev.image_urls, ...previewUrls],
-  }));
-
-  try {
-    setLoading(true);
-
-    // ✅ 2. upload จริงไป backend
-    const uploadedUrls = await Promise.all(
-      files.map(async (file) => {
-        const reader = new FileReader();
-
-        return new Promise<string>((resolve, reject) => {
-          reader.readAsDataURL(file);
-
-          reader.onloadend = async () => {
-            try {
-              const res = await uploadFile(token, reader.result as string);
-              resolve(res.data.url);
-            } catch (err) {
-              reject(err);
-            }
-          };
-
-          reader.onerror = reject;
-        });
-      })
-    );
-
-    // ✅ 3. replace preview ด้วย url จริงจาก cloudinary
     setPostForm((prev) => ({
       ...prev,
-      image_urls: [
-        ...prev.image_urls.slice(0, prev.image_urls.length - previewUrls.length),
-        ...uploadedUrls,
-      ],
+      image_urls: [...prev.image_urls, ...previewUrls],
     }));
-
-  } catch (err) {
-    console.error(err);
-    alert("อัปโหลดรูปไม่สำเร็จ");
-  } finally {
-    setLoading(false);
-  }
-};
-
-  /* ================= Submit ================= */
-
-  const handleSubmit = async () => {
-    if (!token) return alert("กรุณาเข้าสู่ระบบ");
-    if (!postForm.category_id) return alert("กรุณาเลือกหมวดหมู่");
-    if (!postForm.title.trim()) return alert("กรุณากรอกชื่อโพสต์");
 
     try {
       setLoading(true);
 
-      await creatPost(token, postForm);
+      // ✅ 2. upload จริงไป backend
+      const uploadedUrls = await Promise.all(
+        files.map(async (file) => {
+          const reader = new FileReader();
+
+          return new Promise<string>((resolve, reject) => {
+            reader.readAsDataURL(file);
+
+            reader.onloadend = async () => {
+              try {
+                const res = await uploadFile(token, reader.result as string);
+                resolve(res.data.url);
+              } catch (err) {
+                reject(err);
+              }
+            };
+
+            reader.onerror = reject;
+          });
+        }),
+      );
+
+      // ✅ 3. replace preview ด้วย url จริงจาก cloudinary
+      setPostForm((prev) => ({
+        ...prev,
+        image_urls: [
+          ...prev.image_urls.slice(
+            0,
+            prev.image_urls.length - previewUrls.length,
+          ),
+          ...uploadedUrls,
+        ],
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("อัปโหลดรูปไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= Submit ================= */
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      await createPost(token, postForm);
 
       setPostForm({
         category_id: null,
@@ -114,7 +108,6 @@ const handleImageChange = async (
       onOpenChange(false);
     } catch (err) {
       console.error(err);
-      alert("สร้างโพสต์ไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -183,14 +176,31 @@ const handleImageChange = async (
 
           {/* Preview Images */}
           {postForm.image_urls.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
               {postForm.image_urls.map((url, index) => (
-                <img
-                  key={index}
-                  src={url}
-                  alt=""
-                  className="h-24 w-full object-cover rounded-md"
-                />
+                <div key={index} className="relative flex-shrink-0">
+                  {/* ปุ่มลบ */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPostForm((prev) => ({
+                        ...prev,
+                        image_urls: prev.image_urls.filter(
+                          (_, i) => i !== index,
+                        ),
+                      }))
+                    }
+                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white text-sm hover:bg-black"
+                  >
+                    ×
+                  </button>
+
+                  <img
+                    src={url}
+                    alt=""
+                    className="h-28 w-28 rounded-xl object-cover shadow-md transition-transform duration-200 hover:scale-105"
+                  />
+                </div>
               ))}
             </div>
           )}

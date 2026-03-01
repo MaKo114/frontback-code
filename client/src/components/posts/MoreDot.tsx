@@ -8,6 +8,10 @@ import {
 import { MoreHorizontal, Flag } from "lucide-react";
 
 const MoreDot = () => {
+
+  const handle = () => {
+
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -19,7 +23,7 @@ const MoreDot = () => {
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem className="cursor-pointer gap-2">
           <Flag size={16} />
-          <span>รายงานโพสต์</span>
+          <>รายงานโพสต์</>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

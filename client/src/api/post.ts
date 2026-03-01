@@ -1,48 +1,38 @@
 import axios from "axios";
 
-export const creatPost = async (token: string, data) => {
-  try{
-    const res = axios.post(`${import.meta.env.VITE_API_URL}/create-post`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    return res
-  }catch(err){
-    console.log(err);
-    
-  }
-}
+const API = import.meta.env.VITE_API_URL;
 
-export const getAllPost = async(token: string) => {
-  try {
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_URL}/get-all-post`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    return res
-  } catch (err) {
-    console.log(err);
-  }
+/* ================= CREATE ================= */
+
+export const createPost = (token: string, data: any) => {
+  return axios.post(`${API}/create-post`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
+/* ================= GET ALL ================= */
 
-export const getPostByCategory = async (token:string, category_id: number) => {
-    try{
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/post-by-category/${category_id}`, {
-            headers:{
-                Authorization: `Bearer ${token}`
-            }
-        })
-        return res
-    }catch(err){
-        console.log(err); 
-    }
-}
+export const getAllPost = (token: string) => {
+  return axios.get(`${API}/get-all-post`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/* ================= GET BY CATEGORY ================= */
+
+export const getPostByCategory = (token: string, category_id: number) => {
+  return axios.get(`${API}/post-by-category/${category_id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/* ================= DELETE ================= */
+
+export const deletePostApi = (token: string, post_id: number) => {
+  return axios.delete(`${API}/post/${post_id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
 
 export const uploadFile = (token: string, image: string) => {
   return axios.post(
@@ -52,6 +42,27 @@ export const uploadFile = (token: string, image: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 };
+
+export const getMyPost = async (token: string) => {
+  try {
+    const res = await axios.get(`${API}/getpost`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// export const reportPost = async (token: string, post_id: number) => {
+//   try{
+//     const res = await axios.get(`${API}/post`)
+//   }catch(err){
+//     console.log(err);
+
+//   }
+// }

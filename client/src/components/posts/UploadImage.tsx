@@ -8,7 +8,7 @@ interface Props {
   setPostForm: any;
 }
 
-const UploadImage = ({ postForm, setPostForm }: Props) => {
+const UploadImage = ({ setPostForm }: Props) => {
   const token = useTestStore((s) => s.token);
   const [isLoading, setIsLoading] = useState(false);
 

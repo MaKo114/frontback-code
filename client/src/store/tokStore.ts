@@ -12,6 +12,7 @@ interface TestState {
   categories: any[];
   actionLogin: (form: loginForm) => Promise<AxiosResponse<any> | void>;
   fetchCategories: () => Promise<void>;
+  actionLogOut: () => void;
 
 }
 // สร้าง store
@@ -42,7 +43,15 @@ const testStore: StateCreator<TestState> = (set, get) => ({
       } catch (err) {
         console.log(err);
       }
-    }
+    },
+  actionLogOut: () => {
+    set({
+      user: null,
+      token: null,
+      categories: [],
+    })
+    useTestStore.persist.clearStorage();
+  },
   
 });
 

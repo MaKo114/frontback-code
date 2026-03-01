@@ -3,21 +3,11 @@ import { User, Plus, MoreHorizontal} from "lucide-react";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import Title from "../../titles/Title";
 
-const mockPosts = [
-  {
-    id: 1,
-    author: "นมศักดิ์ มาโล",
-    content: "ค่าเลลหมิ๊มครั้ง อยากเช่นน้าแนน อยากค่ายลลลอะจะไร้กืๆครั้ง ให้หมอนมอง สนใจทักแชทมาก็ได้",
-  },
-  {
-    id: 2,
-    author: "นมศักดิ์ มาโล",
-    content: "ค่าเลลหมิ๊มครั้ง อยากเช่นน้าแนน อยากค่ายลลลอะจะไร้กืๆครั้ง ให้หมอนมอง สนใจทักแชทมาก็ได้",
-  },
-];
 
 const MyPosts = () => {
   const navigate = useNavigate();
+  
+
   return (
     <div className="min-h-screen bg-background">
       <Title/>
@@ -44,7 +34,7 @@ const MyPosts = () => {
                 เพิ่มโพส
               </button>
               <button
-                onClick={() => navigate("/edit-profile")}
+                onClick={() => navigate("/user/edit-profile")}
                 className="rounded-full bg-amber-400 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-500 transition"
               >
                 แก้ไขโปรไฟล์

@@ -1,4 +1,5 @@
 
+import useTestStore from "@/store/tokStore";
 import {
   FileText,
   Flag,
@@ -13,7 +14,9 @@ import { useNavigate } from "react-router-dom";
 
 const NavbarAdmin = () => {
   const [activeMenu, setActiveMenu] = useState("โพสต์ทั้งหมด");
+  const logOut = useTestStore((state)=> state.actionLogOut)
   const navigate = useNavigate()
+
 
 const menuItems = [
   { name: "โพสต์ทั้งหมด", icon: FileText, path: "/admin" },
@@ -109,7 +112,9 @@ const menuItems = [
           </div>
 
           {/* Logout Button */}
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 hover:shadow-lg">
+          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
+          onClick={()=>{logOut(); navigate('/login')}}
+          >
             <LogOut className="w-4 h-4" />
             <span className="font-medium">ออกจากระบบ</span>
           </button>

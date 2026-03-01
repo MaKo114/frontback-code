@@ -5,22 +5,18 @@ import Title from "../../titles/Title";
 import PostDialog from "@/components/posts/PostDialog";
 import MoreDot from "@/components/posts/MoreDot";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
 import useTestStore from "@/store/tokStore";
 import CategoriesMenu from "@/components/categories/CategoriesMenu";
 import usePostStore from "@/store/postStore";
-// import { getAllPost } from "@/api/post";
-
+import ImageCard from "@/components/posts/ImageCard";
 
 const HomePage = () => {
-  const fetchPosts = usePostStore((state)=> state.fetchPosts)
-  const posts = usePostStore((state)=> state.posts)
+  const fetchPosts = usePostStore((state) => state.fetchPosts);
+  const posts = usePostStore((state) => state.posts);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  // const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
   const token: any = useTestStore((s) => s.token);
-
 
   useEffect(() => {
     if (token) {
@@ -40,10 +36,8 @@ const HomePage = () => {
               <p className="text-sm font-semibold text-foreground">หมวดหมู่</p>
             </div>
 
-
-          {/* Categories Menu */}
-          <CategoriesMenu/>
-
+            {/* Categories Menu */}
+            <CategoriesMenu />
           </div>
         </aside>
 
@@ -93,21 +87,15 @@ const HomePage = () => {
 
                 {/* Content */}
                 <p className="mb-3 text-sm text-foreground leading-relaxed">
-                  {post.title} 
+                  {post.title}
                   {post.description}
                 </p>
 
                 {/* Images */}
+                {/* Images */}
                 {post.images?.length > 0 && (
-                  <div className="mb-3 h-56 rounded-lg overflow-hidden">
-                    {post.images.map((img: any) => (
-                      <img
-                        key={img.image_id}
-                        src={img.image_url}
-                        alt=""
-                        className="h-full w-full object-cover rounded-lg mb-2"
-                      />
-                    ))}
+                  <div className="mb-3">
+                    <ImageCard images={post.images} />
                   </div>
                 )}
 
@@ -139,10 +127,7 @@ const HomePage = () => {
         เขียนโพสต์
       </button>
 
-      <PostDialog
-        open={isPostDialogOpen}
-        onOpenChange={setIsPostDialogOpen}
-      />
+      <PostDialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen} />
     </div>
   );
 };

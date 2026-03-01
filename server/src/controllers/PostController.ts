@@ -16,8 +16,9 @@ export const createPost = async ({ body, user, set }: any) => {
       set.status = 400;
       return { error: v.error };
     }
-
-    const { category_id, title, description, image_urls } = body;
+    const category_id = Number(body.category_id);
+    const { title, description, image_urls } = body;
+     console.log("BODY:", body);
 
     if (!Array.isArray(image_urls) || image_urls.length === 0) {
       set.status = 400;
@@ -67,11 +68,11 @@ export const createPost = async ({ body, user, set }: any) => {
         WHERE post_id = ${post.post_id}
         ORDER BY image_id ASC
       `;
-
       return { post, images: imgs };
     });
-
+    
     set.status = 201;
+   
     return { message: "Post created successfully!", data: result };
   } catch (err: any) {
     console.error("createPost error:", err);
@@ -562,7 +563,9 @@ export const createImage = async ({ body, set }: any) => {
     );
 
     set.status = 200;
-    return image;
+    return {
+      url: result.secure_url, // ✅ สำคัญมาก
+    };
     // return { message: 'upload successful!!!',
     //   image
     // }
