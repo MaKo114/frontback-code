@@ -5,26 +5,56 @@ import Title from "../../titles/Title";
 import PostDialog from "@/components/posts/PostDialog";
 import MoreDot from "@/components/posts/MoreDot";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
+import axios from "axios";
 import useTestStore from "@/store/tokStore";
-import CategoriesMenu from "@/components/categories/CategoriesMenu";
-import usePostStore from "@/store/postStore";
-// import { getAllPost } from "@/api/post";
 
+const categories = [
+  "ทั้งหมด",
+  "อุปกรณ์ไฟฟ้า",
+  "เครื่องครัว",
+  "อุปกรณ์กีฬา",
+  "ของใช้ในบ้าน",
+  "เครื่องมือวัด",
+  "บรรจุภัณฑ์",
+];
 
 const HomePage = () => {
-  const fetchPosts = usePostStore((state)=> state.fetchPosts)
-  const posts = usePostStore((state)=> state.posts)
+  const [activeCategory, setActiveCategory] = useState("ทั้งหมด");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  // const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
   const token: any = useTestStore((s) => s.token);
 
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/getpost", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setPosts(res.data.data);
+      console.log(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleCreatePost = (title: string, description: string) => {
+    const newPost = {
+      id: Date.now(),
+      title,
+      content: description,
+      createdAt: new Date().toISOString(),
+      images: [],
+    };
+
+    setPosts((prev) => [newPost, ...prev]);
+  };
 
   useEffect(() => {
     if (token) {
-      fetchPosts(token);
+      fetchData();
     }
   }, [token]);
 
@@ -40,10 +70,21 @@ const HomePage = () => {
               <p className="text-sm font-semibold text-foreground">หมวดหมู่</p>
             </div>
 
-
-          {/* Categories Menu */}
-          <CategoriesMenu/>
-
+            <div className="flex flex-col gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
+                    activeCategory === cat
+                      ? "bg-amber-400 text-white shadow"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </aside>
 
@@ -142,8 +183,79 @@ const HomePage = () => {
       <PostDialog
         open={isPostDialogOpen}
         onOpenChange={setIsPostDialogOpen}
+        onCreatePost={handleCreatePost}
       />
     </div>
   );
 };
 export default HomePage;
+
+// <div className="space-y-6">
+//   {posts.map((post) => (
+//     <div
+//       key={post.id}
+//       className="rounded-xl border border-input bg-card p-4 shadow-sm"
+//     >
+//       {/* Post header */}
+//       <div className="mb-3 flex items-center justify-between">
+//         <div className="flex items-center gap-3">
+//           <Avatar className="h-10 w-10 border-2 border-muted">
+//             <AvatarFallback className="bg-muted text-muted-foreground">
+//               <User size={20} />
+//             </AvatarFallback>
+//           </Avatar>
+//           <div>
+//             <p className="text-sm font-semibold text-foreground">
+//               {post.title}
+//             </p>
+//             <p className="text-xs text-muted-foreground">
+//               {post.date}
+//             </p>
+//           </div>
+//         </div>
+
+//         <MoreDot />
+//       </div>
+
+//       {/* Content */}
+//       <p className="mb-3 text-sm text-foreground leading-relaxed">
+//         {post.content}
+//       </p>
+
+//       <div className="mb-3 h-56 rounded-lg bg-amber-100">
+//         {Array.isArray(post.images) &&
+//           post.images.map((img) => (
+//             <div key={img.image_id}>
+//               <img
+//                 src={img.image_url}
+//                 alt=""
+//                 className="h-full w-full object-cover rounded-lg"
+//               />
+//             </div>
+//           ))}
+//       </div>
+
+//       <div className="flex items-center gap-3">
+//         <button
+//           className="transition hover:scale-110"
+//           // onClick={() => toggleLiked(post.id)}
+//         >
+//           <Heart
+//             size={22}
+//             className={
+//               post.liked
+//                 ? "fill-red-500 text-red-500"
+//                 : "text-muted-foreground"
+//             }
+//           />
+//         </button>
+//         <button
+//           className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-amber-500 transition"
+//           onClick={() => navigate("/chat")}
+//         >
+//           แชท
+//         </button>
+//       </div>
+//     </div>
+//   ))}
+// </div>
