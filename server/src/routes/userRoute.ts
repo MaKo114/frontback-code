@@ -20,7 +20,7 @@ import {
   getReportDetails,
   resolveReport,
 } from "../controllers/adminController";
-
+import {search} from "../controllers/searchController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
 export const useRoutes = new Elysia();
 
@@ -38,7 +38,7 @@ useRoutes.post("/creat-post", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.get("/get-all-post", getAllPost)
 
-
+useRoutes.post("/search", search);
 useRoutes.post("/upload-image", createImage)
 
 
