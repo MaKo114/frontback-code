@@ -2,12 +2,8 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8000";
 
-export const getCategories = async (token:string) => {
-  return await axios.get(`${API_URL}/categories`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getCategories = async () => {
+  return await axios.get(`${API_URL}/categories`);
 };
 
 export const createCategory = async (token: string, data: { category_name: string }) => {
