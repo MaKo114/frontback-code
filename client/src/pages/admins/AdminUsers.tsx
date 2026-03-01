@@ -1,30 +1,43 @@
-import { useState } from "react";
+import { getAllUser } from "@/api/user";
+import useTestStore from "@/store/tokStore";
+import { useEffect, useState } from "react";
 
 interface User {
-  id: number;
-  name: string;
+  student_id: number;
+  first_name: string;
+  last_name: string;
   email: string;
-  status: "active" | "banned";
+  role: string;
+  status: "ACTIVE" | "BANNED";
 }
 
-const mockUsers: User[] = [
-  { id: 1, name: "ไอดีหมายเลข 1", email: "toto@hotmail.com", status: "active" },
-  { id: 2, name: "ไอดีหมายเลข 2", email: "toto@hotmail.com", status: "active" },
-  { id: 3, name: "ไอดีหมายเลข 3", email: "toto@hotmail.com", status: "active" },
-  { id: 4, name: "ไอดีหมายเลข 4", email: "toto@hotmail.com", status: "active" },
-  { id: 5, name: "ไอดีหมายเลข 5", email: "toto@hotmail.com", status: "banned" },
-];
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const token = useTestStore((s)=> s.token)
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUser = async() => {
+    try{
+      const res = await getAllUser(token)
+      setUsers(res.data)
+
+    }catch(err){
+      console.log(err);  
+    }
+  }
 
   const toggleStatus = (id: number) => {
     setUsers(users.map(u =>
-      u.id === id
-        ? { ...u, status: u.status === "active" ? "banned" : "active" }
+      u.student_id === id
+        ? { ...u, status: u.status === "ACTIVE" ? "BANNED" : "ACTIVE" }
         : u
     ));
   };
+  
+
+  useEffect(()=>{
+    fetchUser()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -46,28 +59,28 @@ const AdminUsers = () => {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-800">{user.name}</td>
+                  <tr key={user.student_id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-800">{user.first_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.status === "active"
+                        user.status === "ACTIVE"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}>
-                        {user.status === "active" ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                        {user.status === "ACTIVE" ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => toggleStatus(user.id)}
+                        onClick={() => toggleStatus(user.student_id)}
                         className={`px-4 py-1.5 text-xs text-white rounded-lg transition-colors ${
-                          user.status === "active"
+                          user.status === "ACTIVE"
                             ? "bg-red-500 hover:bg-red-600"
                             : "bg-green-500 hover:bg-green-600"
                         }`}
                       >
-                        {user.status === "active" ? "ปิดการใช้งาน" : "เปิดการใช้งาน"}
+                        {user.status === "ACTIVE" ? "ปิดการใช้งาน" : "เปิดการใช้งาน"}
                       </button>
                     </td>
                   </tr>
