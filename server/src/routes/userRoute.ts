@@ -7,7 +7,7 @@ import {
 } from "../controllers/userController";
 import { login, register, requireAdmin, requireUser } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts, editPost, deletePost,changePostStatus } from "../controllers/PostController";
+import { createPost, getMyPosts, editPost, deletePost,changePostStatus, getPostByCategory, getAllPost, createImage } from "../controllers/PostController";
 import { getCategories, createCategory, deleteCategory, updateCategory } from "../controllers/categoryController";
 import {
   blockUser,
@@ -34,8 +34,15 @@ useRoutes.post("/login", login);
 useRoutes.post("/require-user", requireUser, { beforeHandle: authCheck });
 useRoutes.post("/require-admin", requireAdmin, { beforeHandle: [authCheck, adminCheck] });
 
-useRoutes.post("/testpost", createPost, { beforeHandle: authCheck });
+useRoutes.post("/creat-post", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
+useRoutes.get("/get-all-post", getAllPost)
+
+
+useRoutes.post("/upload-image", createImage)
+
+
+useRoutes.get("/post-by-category/:category_id", getPostByCategory)
 useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
 useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
 useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
