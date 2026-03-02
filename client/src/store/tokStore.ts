@@ -21,29 +21,29 @@ const testStore: StateCreator<TestState> = (set, get) => ({
   token: null,
   categories: [],
   actionLogin: async (form: loginForm) => {
-    try{
+    try {
       const res = await axios.post("http://localhost:8000/login", form);
       // เก็บ token ลง localStorage และอัปเดต state
-      set({ 
+      set({
         user: res.data.payload,
         token: res.data.token,
-       });
+      });
       return res
 
-    }catch(err){
+    } catch (err) {
       console.log(err);
     }
   },
-  fetchCategories : async () => {
-      try {
-        const token = get().token
-        const res = await getCategories(token);
-        set({ categories : res.data.data });
+  fetchCategories: async () => {
+    try {
+      const token = get().token
+      const res = await getCategories(token);
+      set({ categories: res.data.data });
 
-      } catch (err) {
-        console.log(err);
-      }
-    },
+    } catch (err) {
+      console.log(err);
+    }
+  },
   actionLogOut: () => {
     set({
       user: null,
@@ -52,7 +52,7 @@ const testStore: StateCreator<TestState> = (set, get) => ({
     })
     useTestStore.persist.clearStorage();
   },
-  
+
 });
 
 const userPersist = {

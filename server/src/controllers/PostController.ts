@@ -1,6 +1,7 @@
 import sql from "../../db";
 import cloudinary from "../lib/clodinary";
 import { strictBody } from "../utils/validate"; // ปรับ path ให้ตรงโปรเจกต์คุณ
+import { postService } from "../services/postService";
 
 export const createPost = async ({ body, user, set }: any) => {
   try {
@@ -368,62 +369,22 @@ export const deletePost = async ({ params, user, set }: any) => {
       return { error: "invalid post_id" };
     }
 
-    const result = await sql.begin(async (tx: any) => {
-      // 1) เช็ค post มีจริง
-      const found = await tx`
-        SELECT post_id, student_id
-        FROM "Post"
-        WHERE post_id = ${post_id}
-        LIMIT 1
-      `;
-
-      if (found.length === 0) {
-        set.status = 404;
-        return { error: "Post not found" };
-      }
-
-      // 2) เช็คสิทธิ์ (owner หรือ admin)
-      const owner_id = found[0].student_id;
-      const isOwner = owner_id === user.student_id;
-      const isAdmin = user.role === "ADMIN";
-
-      if (!isOwner && !isAdmin) {
-        set.status = 403;
-        return { error: "Forbidden" };
-      }
-
-      // 3) ลบ children ก่อน (กัน FK error)
-      await tx`DELETE FROM "post_image" WHERE post_id = ${post_id}`;
-      await tx`DELETE FROM "post_category" WHERE post_id = ${post_id}`;
-
-      // ถ้าคุณมีตารางอื่นที่อ้าง post_id (favorite/report/chat/exchange) แล้วยังไม่ได้ cascade
-      // อาจต้องลบเพิ่มตรงนี้ด้วย หรือทำ ON DELETE CASCADE ใน DB
-
-      // 4) ลบ post
-      const deleted = await tx`
-        DELETE FROM "Post"
-        WHERE post_id = ${post_id}
-        RETURNING post_id
-      `;
-
-      return { message: "Post deleted successfully!", data: deleted[0] };
-    });
-
-    if (result?.error) return result;
+    const isAdmin = user.role === "ADMIN";
+    const deleted = await postService.deletePost(post_id, user.student_id, isAdmin);
 
     set.status = 200;
-    return result;
+    return { message: "Post deleted successfully!", data: deleted };
   } catch (err: any) {
     console.error("deletePost error:", err);
 
-    // ถ้าติด Foreign Key จะมักขึ้น code 23503
-    if (err.code === "23503") {
-      set.status = 409;
-      return {
-        error:
-          "Cannot delete post because it is referenced by other records (FK constraint). You may need cascade delete or soft delete.",
-        detail: err.detail,
-      };
+    if (err.message === "Post not found") {
+      set.status = 404;
+      return { error: err.message };
+    }
+
+    if (err.message.includes("Forbidden")) {
+      set.status = 403;
+      return { error: err.message };
     }
 
     set.status = 500;

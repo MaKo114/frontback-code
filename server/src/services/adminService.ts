@@ -1,4 +1,5 @@
 import sql from "../../db";
+import { postService } from "./postService";
 
 export class AdminService {
   // --- User Management ---
@@ -44,7 +45,7 @@ export class AdminService {
   async getAllListings() {
     return await sql`
       SELECT p.post_id, p.title, p.status, p.created_at, u.first_name, u.last_name,
-             (SELECT count(*) FROM "report" r WHERE r.post_id = p.post_id) as report_count
+             (SELECT count(*) FROM "post_reports" r WHERE r.post_id = p.post_id) as report_count
       FROM "Post" p
       JOIN "User" u ON p.student_id = u.student_id
       ORDER BY p.created_at DESC
@@ -52,41 +53,30 @@ export class AdminService {
   }
 
   async deletePost(post_id: number) {
-    return await sql.begin(async (tx: any) => {
-      // Clean up relations
-      await tx`DELETE FROM "post_image" WHERE post_id = ${post_id}`;
-      await tx`DELETE FROM "post_category" WHERE post_id = ${post_id}`;
-      await tx`DELETE FROM "favorite" WHERE post_id = ${post_id}`;
-      await tx`DELETE FROM "report" WHERE post_id = ${post_id}`;
-      
-      const deleted = await tx`
-        DELETE FROM "Post"
-        WHERE post_id = ${post_id}
-        RETURNING post_id, title
-      `;
-      return deleted[0] || null;
-    });
+    // Use the common postService to handle complex transactional delete
+    // Admin is always allowed to delete any post
+    return await postService.deletePost(post_id, 0, true);
   }
 
   // --- Report Management ---
   async getAllReports() {
     return await sql`
-      SELECT r.report_id, r.text, r.created_at, 
+      SELECT r.report_id, r.reason, r.status, r.created_at, 
              p.post_id, p.title as post_title,
              u.first_name as reporter_name, u.last_name as reporter_surname
-      FROM "report" r
+      FROM "post_reports" r
       JOIN "Post" p ON r.post_id = p.post_id
       JOIN "User" u ON r.reporter_id = u.student_id
       ORDER BY r.created_at DESC
     `;
   }
 
-  async getReportDetails(report_id: number) {
+  async getReportDetails(report_id: string) {
     const report = await sql`
-      SELECT r.report_id, r.text, r.created_at,
+      SELECT r.report_id, r.reason, r.description, r.status, r.created_at,
              p.post_id, p.title as post_title, p.description as post_description,
              u.student_id as reporter_id, u.first_name as reporter_name, u.last_name as reporter_surname
-      FROM "report" r
+      FROM "post_reports" r
       JOIN "Post" p ON r.post_id = p.post_id
       JOIN "User" u ON r.reporter_id = u.student_id
       WHERE r.report_id = ${report_id}
@@ -95,16 +85,14 @@ export class AdminService {
     return report[0] || null;
   }
 
-  async resolveReport(report_id: number) {
-    // In this schema, we don't have a 'resolved' status in the report table, 
-    // so we'll just delete the report to mark it as handled.
-    // Alternatively, we could add a column to the schema, but we'll stick to deletion for now.
-    const deleted = await sql`
-      DELETE FROM "report"
+  async resolveReport(report_id: string) {
+    const updated = await sql`
+      UPDATE "post_reports"
+      SET status = 'RESOLVED'
       WHERE report_id = ${report_id}
-      RETURNING report_id
+      RETURNING report_id, status
     `;
-    return deleted[0] || null;
+    return updated[0] || null;
   }
 }
 

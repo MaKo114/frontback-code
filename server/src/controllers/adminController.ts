@@ -144,7 +144,7 @@ export const getReportDetails = async ({ params, user, set }: any) => {
   const err = checkAdmin(user, set);
   if (err) return err;
 
-  const report_id = Number(params.report_id);
+  const report_id = params.report_id;
   try {
     const report = await adminService.getReportDetails(report_id);
     if (!report) {
@@ -162,7 +162,7 @@ export const resolveReport = async ({ params, user, set }: any) => {
   const err = checkAdmin(user, set);
   if (err) return err;
 
-  const report_id = Number(params.report_id);
+  const report_id = params.report_id;
   try {
     const resolved = await adminService.resolveReport(report_id);
     if (!resolved) {

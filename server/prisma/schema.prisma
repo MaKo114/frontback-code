@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+
 }
 
 model User {
@@ -21,14 +22,15 @@ model User {
   // relations
   posts        Post[]      @relation("UserPosts")
   favorites    Favorite[]
-  reports      Report[]    @relation("UserReports")
+  reports      PostReport[] @relation("UserReports")
   sentMessages Message[]   @relation("UserMessages")
 
   buyerChats   ChatRoom[]  @relation("ChatBuyer")
   sellerChats  ChatRoom[]  @relation("ChatSeller")
 
   ownerExchanges   Exchange[] @relation("ExchangeOwner")
-  receiverExchanges Exchange[] @relation("ExchangeReceiver")
+  requesterExchanges Exchange[] @relation("ExchangeRequester")
+  notifications    Notification[]
 }
 
 model Post {
@@ -45,7 +47,7 @@ model Post {
   categories   PostCategory[]
   favorites    Favorite[]
   images       PostImage[]
-  reports      Report[]
+  reports      PostReport[]
   chatRooms    ChatRoom[]
   exchanges    Exchange[]
 }
@@ -71,14 +73,16 @@ model PostCategory {
 }
 
 model Favorite {
-  user_id Int
-  post_id Int
+  favorite_id String   @id @default(uuid())
+  user_id     Int
+  post_id     Int
+  created_at  DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [student_id])
   post Post @relation(fields: [post_id], references: [post_id])
 
-  @@id([user_id, post_id])
-  @@map("favorite")
+  @@unique([user_id, post_id])
+  @@map("favorites")
 }
 
 model PostImage {
@@ -91,17 +95,20 @@ model PostImage {
   @@map("post_image")
 }
 
-model Report {
-  report_id    Int      @id @default(autoincrement())
+model PostReport {
+  report_id    String       @id @default(uuid())
   post_id      Int
   reporter_id  Int
-  text         String
-  created_at   DateTime @default(now())
+  reason       String
+  description  String?
+  status       ReportStatus @default(PENDING)
+  created_at   DateTime     @default(now())
 
   post     Post @relation(fields: [post_id], references: [post_id])
   reporter User @relation("UserReports", fields: [reporter_id], references: [student_id])
 
-  @@map("report")
+  @@unique([post_id, reporter_id])
+  @@map("post_reports")
 }
 
 model ChatRoom {
@@ -135,19 +142,35 @@ model Message {
 }
 
 model Exchange {
-  exchange_id       Int            @id @default(autoincrement())
-  post_id           Int
-  owner_id          Int
-  receiver_id       Int
-  status            ExchangeStatus @default(PENDING)
-  owner_confirm     Boolean        @default(false)
-  receiver_confirm  Boolean        @default(false)
+  exchange_id   String         @id @default(uuid())
+  post_id       Int
+  owner_id      Int
+  requester_id  Int
+  status        ExchangeStatus @default(PENDING)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
 
-  post     Post @relation(fields: [post_id], references: [post_id])
-  owner    User @relation("ExchangeOwner", fields: [owner_id], references: [student_id])
-  receiver User @relation("ExchangeReceiver", fields: [receiver_id], references: [student_id])
+  post      Post @relation(fields: [post_id], references: [post_id])
+  owner     User @relation("ExchangeOwner", fields: [owner_id], references: [student_id])
+  requester User @relation("ExchangeRequester", fields: [requester_id], references: [student_id])
 
-  @@map("exchange")
+  @@map("exchanges")
+}
+
+model Notification {
+  notification_id String           @id @default(uuid())
+  user_id         Int
+  type            NotificationType
+  reference_id    String?          // ID of related entity (post_id, exchange_id, etc.)
+  message         String
+  is_read         Boolean          @default(false)
+  created_at      DateTime         @default(now())
+
+  user User @relation(fields: [user_id], references: [student_id])
+
+  @@index([user_id])
+  @@index([is_read])
+  @@map("notifications")
 }
 
 enum Role {
@@ -166,10 +189,23 @@ enum PostStatus {
   CLOSED
 }
 
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
+
 enum ExchangeStatus {
   PENDING
   ACCEPTED
   REJECTED
   COMPLETED
-  CANCELED
+}
+
+enum NotificationType {
+  POST_REPORTED
+  EXCHANGE_REQUEST
+  EXCHANGE_ACCEPTED
+  EXCHANGE_REJECTED
+  EXCHANGE_COMPLETED
 }

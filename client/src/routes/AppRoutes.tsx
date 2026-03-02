@@ -11,6 +11,9 @@ import AdminPosts from "../pages/admins/AdminPosts";
 import AdminUsers from "../pages/admins/AdminUsers";
 import AdminCategories from "../pages/admins/AdminCategories";
 import ChatPage from "@/pages/users/ChatPage";
+import Notifications from "@/pages/users/Notifications";
+import Exchanges from "@/pages/users/Exchanges";
+import Favorites from "@/pages/users/Favorites";
 import ProtectRouteUser from "./ProtectRouteUser";
 import ProtectRouteAdmin from "./ProtectRouteAdmin";
 import Layout from "@/layouts/Layout";
@@ -32,6 +35,9 @@ const router = createBrowserRouter([
       { path: "my-posts", element: <MyPosts /> },
       { path: "edit-profile", element: <EditProfile /> },
       { path: "chat", element: <ChatPage /> },
+      { path: "notifications", element: <Notifications /> },
+      { path: "exchanges", element: <Exchanges /> },
+      { path: "favorites", element: <Favorites /> },
     ],
   },
   {
