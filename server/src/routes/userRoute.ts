@@ -21,7 +21,18 @@ import {
   resolveReport,
 } from "../controllers/adminController";
 import {search} from "../controllers/searchController";
+import { createReport } from "../controllers/reportController";
+import { getNotifications, markAllAsRead, markAsRead } from "../controllers/notificationController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
+import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite } from "../controllers/favoriteController";
+import {
+  createExchangeRequest,
+  getMyReceivedRequests,
+  getMySentRequests,
+  updateExchangeStatus,
+  ownerConfirmExchange,
+  requesterConfirmExchange,
+} from "../controllers/exchangeController";
 export const useRoutes = new Elysia();
 
 useRoutes.post("/chat/room", createOrGetChatRoom, { beforeHandle: authCheck });
@@ -56,6 +67,12 @@ useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] })
 useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });
 
+useRoutes.post("/reports", createReport, { beforeHandle: authCheck });
+
+useRoutes.get("/notifications", getNotifications, { beforeHandle: authCheck });
+useRoutes.put("/notifications/:notification_id/read", markAsRead, { beforeHandle: authCheck });
+useRoutes.put("/notifications/read-all", markAllAsRead, { beforeHandle: authCheck });
+
 // Admin routes
 useRoutes.get("/admin/users", getAllUsersAdmin, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.get("/admin/users/:student_id", getUserDetails, { beforeHandle: [authCheck, adminCheck] });
@@ -68,3 +85,15 @@ useRoutes.delete("/admin/delete-post/:post_id", adminDeletePost, { beforeHandle:
 useRoutes.get("/admin/reports", getAllReports, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.get("/admin/reports/:report_id", getReportDetails, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/admin/reports/:report_id", resolveReport, { beforeHandle: [authCheck, adminCheck] });
+
+useRoutes.post("/favorites", addFavorite, { beforeHandle: authCheck });
+useRoutes.delete("/favorites/:post_id", removeFavorite, { beforeHandle: authCheck });
+useRoutes.get("/favorites", getMyFavorites, { beforeHandle: authCheck });
+useRoutes.get("/favorites/check/:post_id", checkIsFavorite, { beforeHandle: authCheck });
+
+useRoutes.post("/exchanges/request", createExchangeRequest, { beforeHandle: authCheck });
+useRoutes.put("/exchanges/:exchange_id/status", updateExchangeStatus, { beforeHandle: authCheck });
+useRoutes.get("/exchanges/sent", getMySentRequests, { beforeHandle: authCheck });
+useRoutes.get("/exchanges/received", getMyReceivedRequests, { beforeHandle: authCheck });
+useRoutes.post("/exchanges/:exchange_id/owner-confirm", ownerConfirmExchange, { beforeHandle: authCheck });
+useRoutes.post("/exchanges/:exchange_id/requester-confirm", requesterConfirmExchange, { beforeHandle: authCheck });

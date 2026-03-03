@@ -8,76 +8,72 @@ datasource db {
 }
 
 model User {
-  student_id Int        @id @default(autoincrement())
-  first_name String
-  last_name  String
-  email      String     @unique
-  password   String
-  status     UserStatus @default(ACTIVE)
-  role       Role       @default(USER)
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-
-  // relations
-  posts        Post[]      @relation("UserPosts")
-  favorites    Favorite[]
-  reports      Report[]    @relation("UserReports")
-  sentMessages Message[]   @relation("UserMessages")
-
-  buyerChats   ChatRoom[]  @relation("ChatBuyer")
-  sellerChats  ChatRoom[]  @relation("ChatSeller")
-
-  ownerExchanges   Exchange[] @relation("ExchangeOwner")
+  email             String     @unique
+  password          String
+  role              Role       @default(USER)
+  created_at        DateTime   @default(now())
+  first_name        String
+  last_name         String
+  status            UserStatus @default(ACTIVE)
+  student_id        Int        @id @default(autoincrement())
+  updated_at        DateTime   @default(now()) @updatedAt
+  birthDate         DateTime?  @db.Date
+  posts             Post[]     @relation("UserPosts")
+  buyerChats        ChatRoom[] @relation("ChatBuyer")
+  sellerChats       ChatRoom[] @relation("ChatSeller")
+  ownerExchanges    Exchange[] @relation("ExchangeOwner")
   receiverExchanges Exchange[] @relation("ExchangeReceiver")
+  favorites         Favorite[]
+  sentMessages      Message[]  @relation("UserMessages")
+  reports           Report[]   @relation("UserReports")
+  notifications Notification[] @relation("UserNotifications")
 }
 
 model Post {
-  post_id     Int        @id @default(autoincrement())
+  post_id     Int            @id @default(autoincrement())
   student_id  Int
   title       String
   description String?
-  status      PostStatus @default(OPEN)
-  created_at  DateTime   @default(now())
-  updated_at  DateTime   @updatedAt
-
-  // relations
-  user         User          @relation("UserPosts", fields: [student_id], references: [student_id])
-  categories   PostCategory[]
-  favorites    Favorite[]
-  images       PostImage[]
-  reports      Report[]
-  chatRooms    ChatRoom[]
-  exchanges    Exchange[]
+  status      PostStatus     @default(OPEN)
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @default(now()) @updatedAt
+  user        User           @relation("UserPosts", fields: [student_id], references: [student_id], onDelete: Cascade)
+  chatRooms   ChatRoom[]
+  exchanges   Exchange[]
+  favorites   Favorite[]
+  categories  PostCategory[]
+  images      PostImage[]
+  reports     Report[]
 }
 
 model Category {
-  category_id   Int      @id @default(autoincrement())
+  category_id   Int            @id @default(autoincrement())
   category_name String
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  posts PostCategory[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now()) @updatedAt
+  posts         PostCategory[]
 }
 
 model PostCategory {
-  category_id Int
+  category_id Int      
   post_id     Int
-
-  category Category @relation(fields: [category_id], references: [category_id])
-  post     Post     @relation(fields: [post_id], references: [post_id])
+  category    Category @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
+  post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
 
   @@id([category_id, post_id])
   @@map("post_category")
 }
 
 model Favorite {
-  user_id Int
-  post_id Int
+  favorite_id Int @id @default(autoincrement())
+  user_id     Int
+  post_id     Int
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now()) @updatedAt
+  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [student_id], onDelete: Cascade)
 
-  user User @relation(fields: [user_id], references: [student_id])
-  post Post @relation(fields: [post_id], references: [post_id])
-
-  @@id([user_id, post_id])
+  @@unique([user_id, post_id])
   @@map("favorite")
 }
 
@@ -85,71 +81,84 @@ model PostImage {
   image_id  Int    @id @default(autoincrement())
   post_id   Int
   image_url String
-
-  post Post @relation(fields: [post_id], references: [post_id])
+  post      Post   @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
 
   @@map("post_image")
 }
 
 model Report {
-  report_id    Int      @id @default(autoincrement())
-  post_id      Int
-  reporter_id  Int
-  text         String
-  created_at   DateTime @default(now())
-
-  post     Post @relation(fields: [post_id], references: [post_id])
-  reporter User @relation("UserReports", fields: [reporter_id], references: [student_id])
+  report_id   Int      @id @default(autoincrement())
+  post_id     Int
+  reporter_id Int
+  reason      String
+  description String
+  created_at  DateTime @default(now())
+  status      reportStatus @default(PENDING)
+  post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  reporter    User     @relation("UserReports", fields: [reporter_id], references: [student_id], onDelete: Cascade)
 
   @@map("report")
 }
 
 model ChatRoom {
-  chat_id          Int      @id @default(autoincrement())
-  post_id          Int
-  buyer_id         Int
-  seller_id        Int
-  created_at       DateTime @default(now())
-  last_message_at  DateTime?
-
-  post   Post @relation(fields: [post_id], references: [post_id])
-  buyer  User @relation("ChatBuyer", fields: [buyer_id], references: [student_id])
-  seller User @relation("ChatSeller", fields: [seller_id], references: [student_id])
-
-  messages Message[]
+  chat_id         Int       @id @default(autoincrement())
+  post_id         Int
+  buyer_id        Int
+  seller_id       Int
+  created_at      DateTime  @default(now())
+  last_message_at DateTime?
+  buyer           User      @relation("ChatBuyer", fields: [buyer_id], references: [student_id], onDelete: Cascade)
+  post            Post      @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  seller          User      @relation("ChatSeller", fields: [seller_id], references: [student_id], onDelete: Cascade)
+  messages        Message[]
 
   @@map("chat_room")
 }
 
 model Message {
-  message_id  Int      @id @default(autoincrement())
-  chat_id     Int
-  sender_id   Int
-  text        String
-  created_at  DateTime @default(now())
-
-  chat   ChatRoom @relation(fields: [chat_id], references: [chat_id])
-  sender User     @relation("UserMessages", fields: [sender_id], references: [student_id])
+  message_id Int      @id @default(autoincrement())
+  chat_id    Int
+  sender_id  Int
+  text       String
+  created_at DateTime @default(now())
+  chat       ChatRoom @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade)
+  sender     User     @relation("UserMessages", fields: [sender_id], references: [student_id], onDelete: Cascade)
 
   @@map("message")
 }
 
 model Exchange {
-  exchange_id       Int            @id @default(autoincrement())
-  post_id           Int
-  owner_id          Int
-  receiver_id       Int
-  status            ExchangeStatus @default(PENDING)
-  owner_confirm     Boolean        @default(false)
-  receiver_confirm  Boolean        @default(false)
-
-  post     Post @relation(fields: [post_id], references: [post_id])
-  owner    User @relation("ExchangeOwner", fields: [owner_id], references: [student_id])
-  receiver User @relation("ExchangeReceiver", fields: [receiver_id], references: [student_id])
+  exchange_id      Int            @id @default(autoincrement())
+  post_id          Int
+  owner_id         Int
+  requester_id     Int
+  status           ExchangeStatus @default(PENDING)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  owner_confirm    Boolean        @default(false)
+  receiver_confirm Boolean        @default(false)
+  owner            User           @relation("ExchangeOwner", fields: [owner_id], references: [student_id], onDelete: Cascade)
+  post             Post           @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  receiver         User           @relation("ExchangeReceiver", fields: [requester_id], references: [student_id], onDelete: Cascade)
 
   @@map("exchange")
 }
+model Notification {
+  notification_id Int      @id @default(autoincrement())
+  user_id         Int
+  type            String
+  message         String
+  reference_id    String?
+  is_read         Boolean  @default(false)
+  created_at      DateTime @default(now())
 
+  user User @relation("UserNotifications", fields: [user_id], references: [student_id], onDelete: Cascade, onUpdate: Cascade)
+  
+  @@map("notifications")
+  @@index([user_id])
+  @@index([user_id, is_read])
+  @@index([created_at])
+}
 enum Role {
   ADMIN
   USER
@@ -160,7 +169,10 @@ enum UserStatus {
   INACTIVE
   BANNED
 }
-
+enum reportStatus{
+  PENDING
+  RESOLVE  
+}
 enum PostStatus {
   OPEN
   CLOSED
