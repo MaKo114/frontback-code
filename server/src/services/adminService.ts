@@ -96,16 +96,26 @@ export class AdminService {
   }
 
   async resolveReport(report_id: number) {
-    // In this schema, we don't have a 'resolved' status in the report table, 
-    // so we'll just delete the report to mark it as handled.
-    // Alternatively, we could add a column to the schema, but we'll stick to deletion for now.
-    const deleted = await sql`
-      DELETE FROM "report"
+  return await sql.begin(async (tx: any) => {
+    const rep = await tx`
+      SELECT report_id, post_id
+      FROM "report"
       WHERE report_id = ${report_id}
-      RETURNING report_id
+      LIMIT 1
     `;
+    if (rep.length === 0) return null;
+
+    const post_id = rep[0].post_id;
+
+    const deleted = await tx`
+      DELETE FROM "Post"
+      WHERE post_id = ${post_id}
+      RETURNING post_id, title
+    `;
+
     return deleted[0] || null;
-  }
+  });
+}
 }
 
 export const adminService = new AdminService();
