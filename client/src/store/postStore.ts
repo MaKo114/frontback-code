@@ -28,11 +28,13 @@ interface Post {
 
 interface PostState {
   posts: Post[];
+  myPosts: Post[];
   fetchPosts: () => Promise<void>;
   fetchPostByCategory: (category_id: number) => Promise<void>;
   deletePost: (post_id: number) => Promise<boolean>;
   addPost: (post: Post) => void;
   clearPosts: () => void;
+  fetchMyPosts: () => Promise<void>;
 }
 
 /* ================= STORE ================= */
@@ -106,9 +108,7 @@ const postStore: StateCreator<PostState> = (set) => ({
       set({ myPosts: res.data.data})
     }catch(err){
       console.log(err);
-      
-    }
-  }
+    }}
 });
 
 const usePostStore = create<PostState>()(postStore);

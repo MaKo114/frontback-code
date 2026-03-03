@@ -53,6 +53,7 @@ export const getMyPost = async (token: string) => {
         Authorization: `Bearer ${token}`,
       },
     });
+    return res
   } catch (err) {
     console.log(err);
   }
