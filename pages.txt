@@ -1,0 +1,7 @@
+ERD - เก็บข้อมูล UML
+use-case -
+sequence diagram -
+BPMN - ไม่บรรยายวิธีการ 
+UXUI - 
+ทำเอกสาร
+- technology ที่เอามาใช้

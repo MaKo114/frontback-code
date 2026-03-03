@@ -58,6 +58,8 @@ useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, admi
 // Admin routes
 useRoutes.get("/admin/users", getAllUsersAdmin, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.get("/admin/users/:student_id", getUserDetails, { beforeHandle: [authCheck, adminCheck] });
+
+
 useRoutes.put("/admin/block-user/:student_id", blockUser, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.put("/admin/unblock-user/:student_id", unblockUser, { beforeHandle: [authCheck, adminCheck] });
 

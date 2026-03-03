@@ -14,6 +14,7 @@ import ChatPage from "@/pages/users/ChatPage";
 import ProtectRouteUser from "./ProtectRouteUser";
 import ProtectRouteAdmin from "./ProtectRouteAdmin";
 import Layout from "@/layouts/Layout";
+import ChatListPage from "@/pages/users/ChatList";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,8 @@ const router = createBrowserRouter([
       { path: "my-posts", element: <MyPosts /> },
       { path: "edit-profile", element: <EditProfile /> },
       { path: "chat", element: <ChatPage /> },
+      { path: "chat-list", element: <ChatListPage /> },
+
     ],
   },
   {
