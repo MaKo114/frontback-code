@@ -18,6 +18,7 @@ interface Post {
   post_id: number;
   title: string;
   description: string;
+  student_id: number;
   first_name: string;
   last_name: string;
   created_at_th: string;
@@ -72,18 +73,18 @@ const postStore: StateCreator<PostState> = (set) => ({
     }
   },
 
-  /* ===== DELETE ===== */
+  /* ===== DELETE (Backend จัดการรูปให้) ===== */
   deletePost: async (post_id) => {
+    // ไม่ต้องรับ public_id มาจากหน้าบ้าน
     try {
       const token = useTestStore.getState().token;
 
+      // Backend ตัวนี้จะไปหา public_id ใน DB เองแล้วลบรูปใน Cloudinary ให้เสร็จสรรพ
       await deletePostApi(token, post_id);
 
-      // ลบออกจาก state ทันที
+
       set((state) => ({
-        posts: state.posts.filter(
-          (p) => p.post_id !== post_id
-        ),
+        posts: state.posts.filter((p) => p.post_id !== post_id),
       }));
 
       return true;
@@ -102,13 +103,14 @@ const postStore: StateCreator<PostState> = (set) => ({
   clearPosts: () => set({ posts: [] }),
 
   fetchMyPosts: async () => {
-    try{
+    try {
       const token = useTestStore.getState().token;
-      const res = await getMyPost(token)
-      set({ myPosts: res.data.data})
-    }catch(err){
+      const res = await getMyPost(token);
+      set({ myPosts: res.data.data });
+    } catch (err) {
       console.log(err);
-    }}
+    }
+  },
 });
 
 const usePostStore = create<PostState>()(postStore);

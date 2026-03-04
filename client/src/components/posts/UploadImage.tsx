@@ -19,9 +19,7 @@ const UploadImage = ({ setPostForm }: Props) => {
     setIsLoading(true);
 
     Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) {
-        return;
-      }
+      if (!file.type.startsWith("image/")) return;
 
       Resize.imageFileResizer(
         file,
@@ -34,30 +32,33 @@ const UploadImage = ({ setPostForm }: Props) => {
           try {
             const res = await uploadFile(token!, data as string);
 
+            // ✅ แก้ตรงนี้: เก็บทั้ง url และ public_id
             setPostForm((prev: any) => ({
               ...prev,
-              image_urls: [...prev.image_urls, res.data.url],
+              // เปลี่ยนชื่อเป็น image_data หรือถ้าจะใช้ image_urls เดิม
+              // ก็ต้องส่งเป็น object เข้าไปครับ
+              image_data: [
+                ...prev.image_data,
+                {
+                  url: res.data.url,
+                  public_id: res.data.public, // 'public' คือชื่อที่พี่ return จาก Backend
+                },
+              ],
             }));
-
           } catch (err) {
-            console.error(err);
+            console.error("Upload failed:", err);
           } finally {
             setIsLoading(false);
           }
         },
-        "base64"
+        "base64",
       );
     });
   };
 
   return (
     <div>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleOnChange}
-      />
+      <input type="file" multiple accept="image/*" onChange={handleOnChange} />
 
       {isLoading && <p>กำลังอัปโหลด...</p>}
     </div>

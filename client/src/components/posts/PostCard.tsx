@@ -33,13 +33,24 @@ const PostCard = ({ post }: PostCardProps) => {
             </p>
           </div>
         </div>
-        <MoreDot />
+        <MoreDot post={post} />
       </div>
 
       {/* Post Content */}
-      <div className="mb-5 space-y-2 cursor-pointer" onClick={() => setIsCommentsOpen(!isCommentsOpen)}>
-        <h3 className="text-lg font-bold text-gray-900 leading-snug">{post.title}</h3>
-        <p className="text-sm text-gray-600 leading-relaxed">{post.description}</p>
+      <div
+        className="mb-5 space-y-2 cursor-pointer"
+        onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+      >
+        {/* ไฟล์ที่โชว์โพสต์หน้า Feed */}
+        <div className="p-4">
+          {/* title */}
+          <h2 className="text-xl font-bold wrap-break-word">{post.title}</h2>
+
+          {/* description: เปลี่ยนมาใช้ whitespace-pre-wrap */}
+          <p className="mt-2 text-gray-700 whitespace-pre-wrap wrap-break-word">
+            {post.description}
+          </p>
+        </div>
       </div>
 
       {/* Post Images */}
@@ -62,15 +73,19 @@ const PostCard = ({ post }: PostCardProps) => {
           <button
             onClick={() => setIsCommentsOpen(!isCommentsOpen)}
             className={`group flex items-center gap-1.5 transition-colors ${
-              isCommentsOpen ? "text-[#FF5800]" : "text-gray-400 hover:text-[#FF5800]"
+              isCommentsOpen
+                ? "text-[#FF5800]"
+                : "text-gray-400 hover:text-[#FF5800]"
             }`}
           >
-            <div className={`p-2 rounded-full transition-colors ${
-              isCommentsOpen ? "bg-orange-50" : "group-hover:bg-orange-50"
-            }`}>
+            <div
+              className={`p-2 rounded-full transition-colors ${
+                isCommentsOpen ? "bg-orange-50" : "group-hover:bg-orange-50"
+              }`}
+            >
               <MessageCircle size={20} />
             </div>
-            <span className="text-xs font-bold">สอบถาม</span>
+            <span className="text-xs font-bold">แสดงความคิดเห็น</span>
           </button>
         </div>
 

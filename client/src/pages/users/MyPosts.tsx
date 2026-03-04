@@ -21,7 +21,7 @@ const MyPosts = () => {
 
   useEffect(() => {
     fetchMyPosts();
-  }, []);
+  }, [myPosts]);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">

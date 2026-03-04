@@ -46,6 +46,15 @@ export const uploadFile = (token: string, image: string) => {
   );
 };
 
+export const deleteImage = (token: string, public_id: string) => {
+  return axios.delete(`${API}/deleted-image`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    data: { public_id }
+  });
+}
+
 export const getMyPost = async (token: string) => {
   try {
     const res = await axios.get(`${API}/getpost`, {

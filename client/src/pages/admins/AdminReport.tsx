@@ -87,8 +87,12 @@ const AdminReport = () => {
       ? reports
       : reports.filter((r) => r.status === filterStatus);
 
+  useEffect(()=>{
+
+  }, [reports])
+
   return (
-    <div className="space-y-6 font-['Inter',_sans-serif]">
+    <div className="space-y-6 font-['Inter',sans-serif]">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>

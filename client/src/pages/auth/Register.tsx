@@ -1,25 +1,29 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Title from "../../titles/Title";
 import { User, Phone, Calendar, Mail, Lock, UserPlus } from "lucide-react";
 import Swal from 'sweetalert2';
+import axios from "axios";
 
-const Register = () => {
   interface registerForm {
-    fname: string;
-    lname: string;
-    phoneNumber: string;
-    birthDate: string;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    birth_date: string;
     email: string;
     password: string;
     confirmPassword: string;
   }
 
+const Register = () => {
+  const navigate = useNavigate()
+  const API = import.meta.env.VITE_API_URL
+
   const [information, setInformation] = useState<registerForm>({
-    fname: "",
-    lname: "",
-    phoneNumber: "",
-    birthDate: "",
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    birth_date: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -47,6 +51,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     return;
   }
 
+  // console.log(information);
   try {
     // แสดง Loading ระหว่างรอ API (Optional)
     Swal.fire({
@@ -58,7 +63,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     });
 
     // สมมติว่าเรียก API ตรงนี้
-    // const res = await axios.post("/api/register", information);
+    const res = await axios.post(`${API}/register`, information);
     
     // 2. สมัครสำเร็จ
     Swal.fire({
@@ -72,6 +77,8 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         navigate("/login");
       }
     });
+
+    
 
   } catch (err) {
     // 3. กรณี Error จาก Server (เช่น อีเมลซ้ำ)
@@ -114,7 +121,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 className={inputStyle}
                 placeholder="ชื่อจริง"
                 type="text"
-                name="fname"
+                name="first_name"
                 required
                 onChange={handleOnChange}
               />
@@ -129,7 +136,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 className={inputStyle}
                 placeholder="นามสกุล"
                 type="text"
-                name="lname"
+                name="last_name"
                 required
                 onChange={handleOnChange}
               />
@@ -147,7 +154,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 className={inputStyle}
                 placeholder="08X-XXX-XXXX"
                 type="text"
-                name="phoneNumber"
+                name="phone_number"
                 required
                 onChange={handleOnChange}
               />
@@ -161,7 +168,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <input 
                 className={inputStyle}
                 type="date" 
-                name="birthDate"
+                name="birth_date"
                 required
                 onChange={handleOnChange}
               />

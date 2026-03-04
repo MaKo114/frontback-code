@@ -7,7 +7,7 @@ import {
 } from "../controllers/userController";
 import { login, register, requireAdmin, requireUser } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts, editPost, deletePost,changePostStatus, getPostByCategory, getAllPost, createImage } from "../controllers/PostController";
+import { createPost, getMyPosts, editPost, deletePost,changePostStatus, getPostByCategory, getAllPost, createImage, deleteImage } from "../controllers/PostController";
 import { getCategories, createCategory, deleteCategory, updateCategory } from "../controllers/categoryController";
 import {
   blockUser,
@@ -56,6 +56,7 @@ useRoutes.get("/get-all-post", getAllPost)
 // search & upload
 useRoutes.post("/search", search);
 useRoutes.post("/upload-image", createImage)
+useRoutes.delete("/deleted-image", deleteImage)
 
 // post
 useRoutes.get("/post-by-category/:category_id", getPostByCategory)
@@ -75,7 +76,7 @@ useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] })
 useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });
 
-// report
+// user create report
 useRoutes.post("/reports", createReport, { beforeHandle: authCheck });
 
 // notification

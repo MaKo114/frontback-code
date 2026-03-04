@@ -129,6 +129,9 @@
     @apply bg-background text-foreground;
     }
 }
+
+/* เพิ่มในไฟล์ CSS */
+
 /* body, html {
   overflow-y: scroll;
 } */

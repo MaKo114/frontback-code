@@ -2,8 +2,17 @@ import sql from "../../db";
 import { strictBody } from "../utils/validate";
 export const register = async ({ body, set }: any) => {
   try {
-    const allowed = ["email", "first_name", "last_name", "password"];
-    const required = ["email", "first_name", "last_name", "password"];
+    const allowed = [
+      "email",
+      "first_name",
+      "last_name",
+      "password",
+      "phone_number",
+      "birth_date", // ต้องตรงกับที่ส่งมาจากหน้าบ้าน
+      "confirmPassword", // ถ้าหน้าบ้านส่งมา ต้องยอมให้ผ่าน หรือไปลบออกที่หน้าบ้าน
+    ];
+
+    const required = ["email", "first_name", "last_name", "password"]; // ฟิลด์ที่ห้ามว่าง
 
     const v = strictBody(body, allowed, required);
     if (!v.ok) {
@@ -11,7 +20,8 @@ export const register = async ({ body, set }: any) => {
       return v.error;
     }
 
-    const { email, first_name, last_name, password } = body;
+    const { email, first_name, last_name, password, birth_date, phone_number } =
+      body;
 
     const foundEmail = await sql`
       SELECT student_id FROM "User"
@@ -29,8 +39,8 @@ export const register = async ({ body, set }: any) => {
     });
 
     await sql`
-      INSERT INTO "User"(email, first_name, last_name, password)
-      VALUES (${email}, ${first_name}, ${last_name}, ${hashPassword})
+      INSERT INTO "User"(email, first_name, last_name, password, "birthDate", phone_number)
+      VALUES (${email}, ${first_name}, ${last_name}, ${hashPassword}, ${birth_date}, ${phone_number})
     `;
 
     set.status = 201;
@@ -77,7 +87,7 @@ export const login = async ({ body, set, jwt }: any) => {
       set.status = 401;
       return `password not match`;
     }
-    
+
     const payLoad = {
       student_id: user[0].student_id,
       email: user[0].email,

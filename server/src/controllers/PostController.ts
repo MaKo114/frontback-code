@@ -9,24 +9,29 @@ export const createPost = async ({ body, user, set }: any) => {
       return { error: "Please login first" };
     }
 
-    const allowed = ["category_id", "title", "description", "image_urls"];
-    const required = ["category_id", "title", "image_urls"];
+    // ✅ 1. ปรับชื่อฟิลด์จาก image_urls เป็น image_data (ให้สื่อความหมายว่าเป็น object)
+    const allowed = ["category_id", "title", "description", "image_data"];
+    const required = ["category_id", "title", "image_data"];
     const v = strictBody(body, allowed, required);
     if (!v.ok) {
       set.status = 400;
       return { error: v.error };
     }
-    const category_id = Number(body.category_id);
-    const { title, description, image_urls } = body;
-     console.log("BODY:", body);
 
-    if (!Array.isArray(image_urls) || image_urls.length === 0) {
+    const category_id = Number(body.category_id);
+    const { title, description, image_data } = body;
+    console.log("BODY:", body);
+
+    // ✅ 2. ปรับการ Check: ตรวจสอบว่าเป็น Array ของ Object หรือไม่
+    if (!Array.isArray(image_data) || image_data.length === 0) {
       set.status = 400;
-      return { error: "image_urls must be a non-empty array" };
+      return { error: "image_data must be a non-empty array" };
     }
-    if (image_urls.some((u) => typeof u !== "string" || u.trim() === "")) {
+
+    // ตรวจสอบว่าข้างในมี url และ public_id ครบไหม
+    if (image_data.some((img) => !img.url || !img.public_id)) {
       set.status = 400;
-      return { error: "image_urls must be array of non-empty strings" };
+      return { error: "Each image must have both url and public_id" };
     }
 
     // เช็ค category มีจริง
@@ -40,7 +45,6 @@ export const createPost = async ({ body, user, set }: any) => {
       return { error: "category_id not found" };
     }
 
-    // ✅ ใช้ transaction กันหลุดครึ่งทาง (postgres.js รองรับ sql.begin)
     const result = await sql.begin(async (tx: any) => {
       const postRows = await tx`
         INSERT INTO "Post"(student_id, title, description, status, created_at, updated_at)
@@ -54,25 +58,24 @@ export const createPost = async ({ body, user, set }: any) => {
         VALUES (${category_id}, ${post.post_id})
       `;
 
-      // insert images
-      for (const url of image_urls) {
+      // ✅ 3. ปรับการ Insert: บันทึกทั้ง image_url และ public_id
+      for (const img of image_data) {
         await tx`
-          INSERT INTO "post_image"(post_id, image_url)
-          VALUES (${post.post_id}, ${url})
+          INSERT INTO "post_image"(post_id, image_url, public_id)
+          VALUES (${post.post_id}, ${img.url}, ${img.public_id})
         `;
       }
 
       const imgs = await tx`
-        SELECT image_id, image_url
+        SELECT image_id, image_url, public_id
         FROM "post_image"
         WHERE post_id = ${post.post_id}
         ORDER BY image_id ASC
       `;
       return { post, images: imgs };
     });
-    
+
     set.status = 201;
-   
     return { message: "Post created successfully!", data: result };
   } catch (err: any) {
     console.error("createPost error:", err);
@@ -80,6 +83,7 @@ export const createPost = async ({ body, user, set }: any) => {
     return { error: err.message };
   }
 };
+
 export const getMyPosts = async ({ user, set }: any) => {
   try {
     if (!user || !user.student_id) {
@@ -128,6 +132,7 @@ ORDER BY p.created_at DESC
     return { error: err.message };
   }
 };
+
 export const editPost = async ({ params, body, user, set }: any) => {
   try {
     if (!user || !user.student_id) {
@@ -355,6 +360,7 @@ export const changePostStatus = async ({ params, body, user, set }: any) => {
     return { error: err.message };
   }
 };
+
 export const deletePost = async ({ params, user, set }: any) => {
   try {
     if (!user || !user.student_id) {
@@ -371,10 +377,8 @@ export const deletePost = async ({ params, user, set }: any) => {
     const result = await sql.begin(async (tx: any) => {
       // 1) เช็ค post มีจริง
       const found = await tx`
-        SELECT post_id, student_id
-        FROM "Post"
-        WHERE post_id = ${post_id}
-        LIMIT 1
+        SELECT post_id, student_id FROM "Post"
+        WHERE post_id = ${post_id} LIMIT 1
       `;
 
       if (found.length === 0) {
@@ -390,6 +394,18 @@ export const deletePost = async ({ params, user, set }: any) => {
       if (!isOwner && !isAdmin) {
         set.status = 403;
         return { error: "Forbidden" };
+      }
+
+      const imagesToDelete = await tx`
+        SELECT public_id FROM "post_image" WHERE post_id = ${post_id}
+      `;
+
+      if (imagesToDelete.length > 0) {
+        for (const img of imagesToDelete) {
+          if (img.public_id) {
+            await cloudinary.uploader.destroy(img.public_id);
+          }
+        }
       }
 
       // 3) ลบ children ก่อน (กัน FK error)
@@ -564,12 +580,40 @@ export const createImage = async ({ body, set }: any) => {
 
     set.status = 200;
     return {
-      url: result.secure_url, // ✅ สำคัญมาก
+      url: result.secure_url,
+      public_id: result.public_id,
     };
-    // return { message: 'upload successful!!!',
-    //   image
-    // }
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const deleteImage = async ({ body, set }: any) => {
+  try {
+    const { public_id } = body;
+
+    if (!public_id) {
+      set.status = 400;
+      return { message: "public_id is required" };
+    }
+
+    // สั่งลบรูปที่ Cloudinary
+    const result = await cloudinary.uploader.destroy(public_id);
+
+    // เช็คว่า Cloudinary ลบสำเร็จไหม (มันจะตอบกลับมาว่า { result: 'ok' })
+    if (result.result !== "ok") {
+      set.status = 400;
+      return { message: "Failed to delete image or image not found" };
+    }
+
+    set.status = 200;
+    return {
+      message: "Image deleted successfully",
+      result,
+    };
+  } catch (err) {
+    console.log(err);
+    set.status = 500;
+    return { message: "Internal Server Error" };
   }
 };

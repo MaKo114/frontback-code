@@ -8,7 +8,7 @@ import { getCategories } from "@/api/category";
 // กำหนด type ของ store
 interface TestState {
   user: any | null;
-  token: string | null;
+  token: string;
   categories: any[];
   actionLogin: (form: loginForm) => Promise<AxiosResponse<any> | void>;
   fetchCategories: () => Promise<void>;
@@ -18,7 +18,7 @@ interface TestState {
 // สร้าง store
 const testStore: StateCreator<TestState> = (set, get) => ({
   user: null,
-  token: null,
+  token: "",
   categories: [],
   actionLogin: async (form: loginForm) => {
     try{
@@ -47,7 +47,7 @@ const testStore: StateCreator<TestState> = (set, get) => ({
   actionLogOut: () => {
     set({
       user: null,
-      token: null,
+      token: "",
       categories: [],
     })
     useTestStore.persist.clearStorage();

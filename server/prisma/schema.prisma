@@ -8,25 +8,26 @@ datasource db {
 }
 
 model User {
-  email             String     @unique
+  email             String         @unique
   password          String
-  role              Role       @default(USER)
-  created_at        DateTime   @default(now())
+  role              Role           @default(USER)
+  created_at        DateTime       @default(now())
   first_name        String
   last_name         String
-  status            UserStatus @default(ACTIVE)
-  student_id        Int        @id @default(autoincrement())
-  updated_at        DateTime   @default(now()) @updatedAt
-  birthDate         DateTime?  @db.Date
-  posts             Post[]     @relation("UserPosts")
-  buyerChats        ChatRoom[] @relation("ChatBuyer")
-  sellerChats       ChatRoom[] @relation("ChatSeller")
-  ownerExchanges    Exchange[] @relation("ExchangeOwner")
-  receiverExchanges Exchange[] @relation("ExchangeReceiver")
+  phone_number      String?
+  status            UserStatus     @default(ACTIVE)
+  student_id        Int            @id @default(autoincrement())
+  updated_at        DateTime       @default(now()) @updatedAt
+  birthDate         DateTime?      @db.Date
+  posts             Post[]         @relation("UserPosts")
+  buyerChats        ChatRoom[]     @relation("ChatBuyer")
+  sellerChats       ChatRoom[]     @relation("ChatSeller")
+  ownerExchanges    Exchange[]     @relation("ExchangeOwner")
+  receiverExchanges Exchange[]     @relation("ExchangeReceiver")
   favorites         Favorite[]
-  sentMessages      Message[]  @relation("UserMessages")
-  reports           Report[]   @relation("UserReports")
-  notifications Notification[] @relation("UserNotifications")
+  sentMessages      Message[]      @relation("UserMessages")
+  reports           Report[]       @relation("UserReports")
+  notifications     Notification[] @relation("UserNotifications")
 }
 
 model Post {
@@ -55,7 +56,7 @@ model Category {
 }
 
 model PostCategory {
-  category_id Int      
+  category_id Int
   post_id     Int
   category    Category @relation(fields: [category_id], references: [category_id], onDelete: Cascade)
   post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
@@ -65,13 +66,13 @@ model PostCategory {
 }
 
 model Favorite {
-  favorite_id Int @id @default(autoincrement())
+  favorite_id Int      @id @default(autoincrement())
   user_id     Int
   post_id     Int
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @default(now()) @updatedAt
-  post Post @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-  user User @relation(fields: [user_id], references: [student_id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+  post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  user        User     @relation(fields: [user_id], references: [student_id], onDelete: Cascade)
 
   @@unique([user_id, post_id])
   @@map("favorite")
@@ -81,21 +82,22 @@ model PostImage {
   image_id  Int    @id @default(autoincrement())
   post_id   Int
   image_url String
+  public_id String
   post      Post   @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
 
   @@map("post_image")
 }
 
 model Report {
-  report_id   Int      @id @default(autoincrement())
+  report_id   Int          @id @default(autoincrement())
   post_id     Int
   reporter_id Int
   reason      String
   description String
-  created_at  DateTime @default(now())
+  created_at  DateTime     @default(now())
   status      reportStatus @default(PENDING)
-  post        Post     @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
-  reporter    User     @relation("UserReports", fields: [reporter_id], references: [student_id], onDelete: Cascade)
+  post        Post         @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  reporter    User         @relation("UserReports", fields: [reporter_id], references: [student_id], onDelete: Cascade)
 
   @@map("report")
 }
@@ -133,8 +135,8 @@ model Exchange {
   owner_id         Int
   requester_id     Int
   status           ExchangeStatus @default(PENDING)
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @default(now())
   owner_confirm    Boolean        @default(false)
   receiver_confirm Boolean        @default(false)
   owner            User           @relation("ExchangeOwner", fields: [owner_id], references: [student_id], onDelete: Cascade)
@@ -143,6 +145,7 @@ model Exchange {
 
   @@map("exchange")
 }
+
 model Notification {
   notification_id Int      @id @default(autoincrement())
   user_id         Int
@@ -153,12 +156,13 @@ model Notification {
   created_at      DateTime @default(now())
 
   user User @relation("UserNotifications", fields: [user_id], references: [student_id], onDelete: Cascade, onUpdate: Cascade)
-  
-  @@map("notifications")
+
   @@index([user_id])
   @@index([user_id, is_read])
   @@index([created_at])
+  @@map("notifications")
 }
+
 enum Role {
   ADMIN
   USER
@@ -169,10 +173,12 @@ enum UserStatus {
   INACTIVE
   BANNED
 }
-enum reportStatus{
+
+enum reportStatus {
   PENDING
-  RESOLVE  
+  RESOLVE
 }
+
 enum PostStatus {
   OPEN
   CLOSED

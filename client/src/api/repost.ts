@@ -14,3 +14,16 @@ export const getUserReport = async(token:string) => {
         console.log(err);
     }
 }
+
+export const createReport = async (report: string, token: string) => {
+    try{
+        const res = axios.post(`${API}/reports`, report, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        return res
+    }catch(err){
+        console.log(err);
+    }
+}

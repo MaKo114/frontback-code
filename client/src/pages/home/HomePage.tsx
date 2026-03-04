@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Search, Pencil } from "lucide-react";
 import Title from "../../titles/Title";
 import PostDialog from "@/components/posts/PostDialog";
-import useTestStore from "@/store/tokStore";
+// import useTestStore from "@/store/tokStore";
 import usePostStore from "@/store/postStore";
 import PostCard from "@/components/posts/PostCard";
 import SideBar from "@/layouts/SideBar";
@@ -13,11 +13,11 @@ const HomePage = () => {
   const posts = usePostStore((state) => state.posts);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const token: any = useTestStore((s) => s.token);
+  // const token: any = useTestStore((s) => s.token);
 
   useEffect(() => {
-    if (token) fetchPosts(token);
-  }, [token]);
+    fetchPosts();
+  }, [posts]);
 
   const filteredPosts = posts.filter(
     (post: any) =>
@@ -26,7 +26,7 @@ const HomePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-['Inter',_sans-serif]">
+    <div className="min-h-screen bg-[#F8F9FA] font-['Inter',sans-serif]">
       <Title />
 
       <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8">
@@ -40,7 +40,7 @@ const HomePage = () => {
               placeholder="ค้นหาสิ่งที่น่าสนใจ..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-[20px] border-none bg-white py-4 pl-12 pr-6 text-sm shadow-sm outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-[#FF5800]/50 transition-all"
+              className="w-full rounded-4xl border-none bg-white py-4 pl-12 pr-6 text-sm shadow-sm outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-[#FF5800]/50 transition-all"
             />
             <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF5800] transition-colors" />
           </div>
@@ -64,7 +64,7 @@ const HomePage = () => {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsPostDialogOpen(true)}
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FF5800] px-6 py-4 font-black text-white shadow-lg hover:scale-105 active:scale-95 transition-all group"
+        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-full bg-linear-to-r from-[#FFB800] to-[#FF5800] px-6 py-4 font-black text-white shadow-lg hover:scale-105 active:scale-95 transition-all group"
       >
         <div className="bg-white/20 p-1.5 rounded-lg group-hover:rotate-12 transition-transform">
           <Pencil size={18} />
