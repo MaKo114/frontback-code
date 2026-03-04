@@ -83,4 +83,22 @@ export const checkIsFavorite = async ({ params, user, set }: any) => {
     set.status = 500;
     return { error: err.message };
   }
+
+};
+// favoriteController.ts
+export const getPostFavoriteCount = async ({ params, set }: any) => {
+  try {
+    const post_id = Number(params.post_id);
+    if (!post_id || Number.isNaN(post_id)) {
+      set.status = 400;
+      return { error: "Invalid post_id" };
+    }
+
+    const count = await favoriteService.getFavoriteCount(post_id);
+    set.status = 200;
+    return { post_id, count };
+  } catch (err: any) {
+    set.status = 500;
+    return { error: err.message };
+  }
 };

@@ -24,7 +24,7 @@ import {search} from "../controllers/searchController";
 import { createReport } from "../controllers/reportController";
 import { getNotifications, markAllAsRead, markAsRead } from "../controllers/notificationController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
-import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite } from "../controllers/favoriteController";
+import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite,getPostFavoriteCount } from "../controllers/favoriteController";
 import {
   createExchangeRequest,
   getMyReceivedRequests,
@@ -105,6 +105,7 @@ useRoutes.post("/favorites", addFavorite, { beforeHandle: authCheck });
 useRoutes.delete("/favorites/:post_id", removeFavorite, { beforeHandle: authCheck });
 useRoutes.get("/favorites", getMyFavorites, { beforeHandle: authCheck });
 useRoutes.get("/favorites/check/:post_id", checkIsFavorite, { beforeHandle: authCheck });
+useRoutes.get("/posts/:post_id/favorites/count", getPostFavoriteCount);
 
 // exchange
 useRoutes.post("/exchanges/request", createExchangeRequest, { beforeHandle: authCheck });
