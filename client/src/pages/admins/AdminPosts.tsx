@@ -94,6 +94,50 @@ const AdminPosts = () => {
       {/* Table Section */}
       <div className="bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
+          {/* Pagination Section */}
+          <div className="px-8 py-5 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs font-bold text-gray-500 order-2 sm:order-1">
+                Showing {filteredPosts.length > 0 ? indexOfFirstPost + 1 : 0} to
+                {Math.min(indexOfLastPost, filteredPosts.length)} of
+                {filteredPosts.length} Posts
+            </p>
+
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+                { /* ปุ่มก่อนหน้า */ }
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  <ChevronLeft size={18}/>
+                </button>
+              
+                { /* ปุ่มเลขหน้า */ }
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                    currentPage === page
+                      ? "bg-[#FF5800] text-white shadow-lg shadow-[#FF5800]/20"
+                      : "bg-white border border-gray-200 text-gray-400 hover:border-[#FF5800] hover:text-[#FF5800]"
+                  }`}>
+                    {page}
+                  </button>
+                  ))}
+                </div>
+                
+                { /* ปุ่มถัดไป */ }
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  <ChevronRight size={18} />
+                </button>
+            </div>
+          </div>
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
@@ -172,50 +216,6 @@ const AdminPosts = () => {
           </table>
         </div>
 
-        {/* Pagination Section */}
-        <div className="px-8 py-5 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-bold text-gray-500 order-2 sm:order-1">
-              Showing {filteredPosts.length > 0 ? indexOfFirstPost + 1 : 0} to
-              {Math.min(indexOfLastPost, filteredPosts.length)} of
-              {filteredPosts.length} Posts
-          </p>
-
-          <div className="flex items-center gap-2 order-1 sm:order-2">
-              { /* ปุ่มก่อนหน้า */ }
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
-              >
-                <ChevronLeft size={18}/>
-              </button>
-            
-              { /* ปุ่มเลขหน้า */ }
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                  currentPage === page
-                    ? "bg-[#FF5800] text-white shadow-lg shadow-[#FF5800]/20"
-                    : "bg-white border border-gray-200 text-gray-400 hover:border-[#FF5800] hover:text-[#FF5800]"
-                }`}>
-                  {page}
-                </button>
-                ))}
-              </div>
-              
-              { /* ปุ่มถัดไป */ }
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
-              >
-                <ChevronRight size={18} />
-              </button>
-          </div>
-        </div>
       </div>
     </div>
   );
