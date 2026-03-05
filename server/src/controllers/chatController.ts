@@ -114,14 +114,13 @@ export const getMyChatRooms = async ({ user, set }: any) => {
 
       ORDER BY COALESCE(cr.last_message_at, cr.created_at) DESC
     `;
-    console.log("rooms result:", JSON.stringify(rooms, null, 2));
+    // console.log("rooms result:", JSON.stringify(rooms, null, 2));
     return { data: rooms };
   } catch (err: any) {
     set.status = 500;
     return { error: err.message };
   }
 };
-
 
 // GET /chat/rooms/:chat_id/messages  (ข้อความในห้อง)
 export const getMessagesByRoom = async ({ params, user, set }: any) => {
@@ -177,17 +176,17 @@ export const getMessagesByRoom = async ({ params, user, set }: any) => {
     const roomInfo = await sql`
       SELECT 
         p.title as post_title,
-        -- ดึงทั้งชื่อและนามสกุลของคู่สนทนา
+        p.post_id,
+        cr.buyer_id,        -- ← เพิ่มบรรทัดนี้
+        cr.seller_id,       -- ← เพิ่มบรรทัดนี้
         CASE 
           WHEN cr.buyer_id = ${user.student_id} THEN seller.first_name 
           ELSE buyer.first_name 
         END AS other_name,
-        
         CASE 
           WHEN cr.buyer_id = ${user.student_id} THEN seller.last_name 
           ELSE buyer.last_name 
-        END AS other_last_name -- 👈 เพิ่มบรรทัดนี้เข้าไปครับ!
-        
+        END AS other_last_name
       FROM "chat_room" cr
       JOIN "Post" p ON p.post_id = cr.post_id
       JOIN "User" buyer ON buyer.student_id = cr.buyer_id
@@ -206,8 +205,6 @@ export const getMessagesByRoom = async ({ params, user, set }: any) => {
   }
 };
 
-// POST /chat/rooms/:chat_id/messages  (ส่งข้อความ)
-// body: { text }
 export const sendMessage = async ({ params, body, user, set }: any) => {
   try {
     if (!user?.student_id) {
@@ -255,45 +252,26 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
         set.status = 403;
         return { error: "Forbidden" };
       }
+
+      // เช็คแค่ว่าโพสต์ปิดหรือเปล่า
       const roomPost = await tx`
-  SELECT cr.post_id, p.status AS post_status
-  FROM "chat_room" cr
-  JOIN "Post" p ON p.post_id = cr.post_id
-  WHERE cr.chat_id = ${chat_id}
-  LIMIT 1
-`;
+        SELECT p.status AS post_status
+        FROM "chat_room" cr
+        JOIN "Post" p ON p.post_id = cr.post_id
+        WHERE cr.chat_id = ${chat_id}
+        LIMIT 1
+      `;
 
-if (roomPost.length === 0) {
-  set.status = 404;
-  return { error: "Chat room not found" };
-}
+      if (roomPost.length === 0) {
+        set.status = 404;
+        return { error: "Chat room not found" };
+      }
 
-if (roomPost[0].post_status === "CLOSED") {
-  set.status = 409;
-  return { error: "Chat is closed because the post is closed" };
-}
+      if (roomPost[0].post_status === "CLOSED") {
+        set.status = 409;
+        return { error: "ไม่สามารถส่งข้อความได้ เนื่องจากโพสต์นี้ปิดแล้ว" };
+      }
 
-// เช็ค exchange ของคู่นี้ในโพสต์นี้ (ถ้ามี)
-const buyerId = room[0].buyer_id;
-const sellerId = room[0].seller_id;
-
-const ex = await tx`
-  SELECT status
-  FROM "exchange"
-  WHERE post_id = ${roomPost[0].post_id}
-    AND owner_id = ${sellerId}
-    AND requester_id = ${buyerId}
-  ORDER BY created_at DESC
-  LIMIT 1
-`;
-
-if (ex.length > 0) {
-  const st = ex[0].status;
-  if (st === "REJECTED" || st === "CANCELED" || st === "COMPLETED") {
-    set.status = 409;
-    return { error: `Chat is closed because exchange is ${st}` };
-  }
-}
       // insert message
       const msgRows = await tx`
         INSERT INTO "message"(chat_id, sender_id, text, created_at)

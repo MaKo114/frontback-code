@@ -14,7 +14,8 @@ export class ExchangeService {
 
       const ownerId = post[0].student_id;
 
-      if (ownerId === requesterId) throw new Error("You cannot request your own post");
+      if (ownerId === requesterId)
+        throw new Error("You cannot request your own post");
 
       // กันซ้ำ (pending)
       const existing = await tx`
@@ -25,7 +26,8 @@ export class ExchangeService {
           AND status = 'PENDING'
         LIMIT 1
       `;
-      if (existing.length > 0) throw new Error("You already have a pending request for this post");
+      if (existing.length > 0)
+        throw new Error("You already have a pending request for this post");
 
       const exchange = await tx`
         INSERT INTO "exchange" (post_id, requester_id, owner_id, status, created_at, updated_at)
@@ -38,87 +40,97 @@ export class ExchangeService {
         ownerId,
         "EXCHANGE_REQUEST",
         `Someone requested to exchange with your post: ${post[0].title}`,
-        String(exchange[0].exchange_id)
+        String(exchange[0].exchange_id),
       );
 
       return exchange[0];
     });
   }
 
-//   async updateStatus(
-//     exchangeId: number,
-//     ownerId: number,
-//     status: "ACCEPTED" | "REJECTED" | "COMPLETED"
-//   ) {
-//     return await sql.begin(async (tx: any) => {
-//       const found = await tx`
-//         SELECT e.*, p.title
-//         FROM "exchange" e
-//         JOIN "Post" p ON e.post_id = p.post_id
-//         WHERE e.exchange_id = ${exchangeId}
-//           AND e.owner_id = ${ownerId}
-//         LIMIT 1
-//       `;
-//       if (found.length === 0) throw new Error("Exchange request not found or you are not the owner");
+  //   async updateStatus(
+  //     exchangeId: number,
+  //     ownerId: number,
+  //     status: "ACCEPTED" | "REJECTED" | "COMPLETED"
+  //   ) {
+  //     return await sql.begin(async (tx: any) => {
+  //       const found = await tx`
+  //         SELECT e.*, p.title
+  //         FROM "exchange" e
+  //         JOIN "Post" p ON e.post_id = p.post_id
+  //         WHERE e.exchange_id = ${exchangeId}
+  //           AND e.owner_id = ${ownerId}
+  //         LIMIT 1
+  //       `;
+  //       if (found.length === 0) throw new Error("Exchange request not found or you are not the owner");
 
-//       const exchange = found[0];
+  //       const exchange = found[0];
 
-//       const updated = await tx`
-//         UPDATE "exchange"
-//         SET status = ${status}, updated_at = NOW()
-//         WHERE exchange_id = ${exchangeId}
-//         RETURNING *
-//       `;
+  //       const updated = await tx`
+  //         UPDATE "exchange"
+  //         SET status = ${status}, updated_at = NOW()
+  //         WHERE exchange_id = ${exchangeId}
+  //         RETURNING *
+  //       `;
 
-//       // notify requester
-//       let type: string = "EXCHANGE_ACCEPTED";
-//       if (status === "REJECTED") type = "EXCHANGE_REJECTED";
-//       if (status === "COMPLETED") type = "EXCHANGE_COMPLETED";
+  //       // notify requester
+  //       let type: string = "EXCHANGE_ACCEPTED";
+  //       if (status === "REJECTED") type = "EXCHANGE_REJECTED";
+  //       if (status === "COMPLETED") type = "EXCHANGE_COMPLETED";
 
-//       const msg = `Your request for ${exchange.title} has been ${status.toLowerCase()}`;
+  //       const msg = `Your request for ${exchange.title} has been ${status.toLowerCase()}`;
 
-//       await notificationService.createNotification(
-//         tx,
-//         exchange.requester_id,
-//         type,
-//         msg,
-//         String(exchangeId)
-//       );
+  //       await notificationService.createNotification(
+  //         tx,
+  //         exchange.requester_id,
+  //         type,
+  //         msg,
+  //         String(exchangeId)
+  //       );
 
-//       if (status === "COMPLETED") {
-//         await tx`
-//           UPDATE "Post"
-//           SET status = 'CLOSED', updated_at = NOW()
-//           WHERE post_id = ${exchange.post_id}
-//         `;
-//       }
+  //       if (status === "COMPLETED") {
+  //         await tx`
+  //           UPDATE "Post"
+  //           SET status = 'CLOSED', updated_at = NOW()
+  //           WHERE post_id = ${exchange.post_id}
+  //         `;
+  //       }
 
-//       return updated[0];
-//     });
-//   }
+  //       return updated[0];
+  //     });
+  //   }
 
   async getMyRequests(userId: number) {
     return await sql`
-      SELECT e.*, p.title,
-             u.first_name as owner_name, u.last_name as owner_surname
-      FROM "exchange" e
-      JOIN "Post" p ON e.post_id = p.post_id
-      JOIN "User" u ON e.owner_id = u.student_id
-      WHERE e.requester_id = ${userId}
-      ORDER BY e.created_at DESC
-    `;
+    SELECT e.*, p.title,
+           u.first_name as owner_name, u.last_name as owner_surname,
+           cr.chat_id
+    FROM "exchange" e
+    JOIN "Post" p ON e.post_id = p.post_id
+    JOIN "User" u ON e.owner_id = u.student_id
+    LEFT JOIN "chat_room" cr 
+      ON cr.post_id = e.post_id 
+      AND cr.buyer_id = e.requester_id 
+      AND cr.seller_id = e.owner_id
+    WHERE e.requester_id = ${userId}
+    ORDER BY e.created_at DESC
+  `;
   }
 
   async getMyPendingRequests(userId: number) {
     return await sql`
-      SELECT e.*, p.title,
-             u.first_name as requester_name, u.last_name as requester_surname
-      FROM "exchange" e
-      JOIN "Post" p ON e.post_id = p.post_id
-      JOIN "User" u ON e.requester_id = u.student_id
-      WHERE e.owner_id = ${userId}
-      ORDER BY e.created_at DESC
-    `;
+    SELECT e.*, p.title,
+           u.first_name as requester_name, u.last_name as requester_surname,
+           cr.chat_id
+    FROM "exchange" e
+    JOIN "Post" p ON e.post_id = p.post_id
+    JOIN "User" u ON e.requester_id = u.student_id
+    LEFT JOIN "chat_room" cr 
+      ON cr.post_id = e.post_id 
+      AND cr.buyer_id = e.requester_id 
+      AND cr.seller_id = e.owner_id
+    WHERE e.owner_id = ${userId}
+    ORDER BY e.created_at DESC
+  `;
   }
   // exchangeService.ts
 
@@ -132,7 +144,8 @@ export class ExchangeService {
           AND e.owner_id = ${ownerId}
         LIMIT 1
       `;
-      if (found.length === 0) throw new Error("Exchange not found or you are not the owner");
+      if (found.length === 0)
+        throw new Error("Exchange not found or you are not the owner");
 
       const e = found[0];
 
@@ -153,7 +166,7 @@ export class ExchangeService {
         e.requester_id,
         "EXCHANGE_OWNER_CONFIRMED",
         `Owner confirmed exchange for: ${e.title}`,
-        String(exchangeId)
+        String(exchangeId),
       );
 
       // ถ้าทั้งคู่คอนเฟิร์มแล้ว -> complete
@@ -171,7 +184,8 @@ export class ExchangeService {
           AND e.requester_id = ${requesterId}
         LIMIT 1
       `;
-      if (found.length === 0) throw new Error("Exchange not found or you are not the requester");
+      if (found.length === 0)
+        throw new Error("Exchange not found or you are not the requester");
 
       const e = found[0];
 
@@ -192,7 +206,7 @@ export class ExchangeService {
         e.owner_id,
         "EXCHANGE_REQUESTER_CONFIRMED",
         `Requester confirmed exchange for: ${e.title}`,
-        String(exchangeId)
+        String(exchangeId),
       );
 
       return await this._completeIfBothConfirmed(tx, exchangeId);
@@ -229,14 +243,14 @@ export class ExchangeService {
         e.owner_id,
         "EXCHANGE_COMPLETED",
         `Exchange completed (ID: ${exchangeId})`,
-        String(exchangeId)
+        String(exchangeId),
       );
       await notificationService.createNotification(
         tx,
         e.requester_id,
         "EXCHANGE_COMPLETED",
         `Exchange completed (ID: ${exchangeId})`,
-        String(exchangeId)
+        String(exchangeId),
       );
 
       return completed[0];
@@ -246,9 +260,13 @@ export class ExchangeService {
   }
 
   // ปรับ updateStatus เดิม: ให้ owner ทำได้แค่ ACCEPT/REJECT (ไม่ให้ COMPLETED)
-  async updateStatus(exchangeId: number, ownerId: number, status: "ACCEPTED" | "REJECTED") {
-  return await sql.begin(async (tx: any) => {
-    const found = await tx`
+  async updateStatus(
+    exchangeId: number,
+    ownerId: number,
+    status: "ACCEPTED" | "REJECTED",
+  ) {
+    return await sql.begin(async (tx: any) => {
+      const found = await tx`
       SELECT e.*, p.title
       FROM "exchange" e
       JOIN "Post" p ON e.post_id = p.post_id
@@ -256,23 +274,25 @@ export class ExchangeService {
         AND e.owner_id = ${ownerId}
       LIMIT 1
     `;
-    if (found.length === 0) throw new Error("Exchange request not found or you are not the owner");
+      if (found.length === 0)
+        throw new Error("Exchange request not found or you are not the owner");
 
-    const e = found[0];
-    if (e.status === "COMPLETED") throw new Error("Exchange is already completed");
+      const e = found[0];
+      if (e.status === "COMPLETED")
+        throw new Error("Exchange is already completed");
 
-    // ถ้า owner ACCEPT -> ยอมรับอันนี้ + ยกเลิก/ปฏิเสธอันอื่นของ post เดียวกัน
-    if (status === "ACCEPTED") {
-      // 1) อัปเดตอันที่เลือกเป็น ACCEPTED
-      const updated = await tx`
+      // ถ้า owner ACCEPT -> ยอมรับอันนี้ + ยกเลิก/ปฏิเสธอันอื่นของ post เดียวกัน
+      if (status === "ACCEPTED") {
+        // 1) อัปเดตอันที่เลือกเป็น ACCEPTED
+        const updated = await tx`
         UPDATE "exchange"
         SET status = 'ACCEPTED', updated_at = NOW()
         WHERE exchange_id = ${exchangeId}
         RETURNING *
       `;
 
-      // 2) ปิดคำขออื่นทั้งหมดที่ยัง PENDING (เลือกใช้ CANCELED หรือ REJECTED)
-      const others = await tx`
+        // 2) ปิดคำขออื่นทั้งหมดที่ยัง PENDING (เลือกใช้ CANCELED หรือ REJECTED)
+        const others = await tx`
         UPDATE "exchange"
         SET status = 'CANCELED', updated_at = NOW()
         WHERE post_id = ${e.post_id}
@@ -281,49 +301,48 @@ export class ExchangeService {
         RETURNING exchange_id, requester_id
       `;
 
-      // 3) แจ้ง requester ที่ถูก accept
-      await notificationService.createNotification(
-        tx,
-        e.requester_id,
-        "EXCHANGE_ACCEPTED",
-        `Your request for ${e.title} has been accepted`,
-        String(exchangeId)
-      );
-
-      // 4) แจ้ง requester คนอื่นว่าถูกยกเลิก
-      for (const o of others) {
+        // 3) แจ้ง requester ที่ถูก accept
         await notificationService.createNotification(
           tx,
-          o.requester_id,
-          "EXCHANGE_CANCELED",
-          `Your request for ${e.title} was canceled because the owner accepted another request`,
-          String(o.exchange_id)
+          e.requester_id,
+          "EXCHANGE_ACCEPTED",
+          `Your request for ${e.title} has been accepted`,
+          String(exchangeId),
         );
+
+        // 4) แจ้ง requester คนอื่นว่าถูกยกเลิก
+        for (const o of others) {
+          await notificationService.createNotification(
+            tx,
+            o.requester_id,
+            "EXCHANGE_CANCELED",
+            `Your request for ${e.title} was canceled because the owner accepted another request`,
+            String(o.exchange_id),
+          );
+        }
+
+        return updated[0];
       }
 
-      return updated[0];
-    }
-
-    // ถ้า REJECTED -> reject แค่อันนี้
-    const updated = await tx`
+      // ถ้า REJECTED -> reject แค่อันนี้
+      const updated = await tx`
       UPDATE "exchange"
       SET status = 'REJECTED', updated_at = NOW()
       WHERE exchange_id = ${exchangeId}
       RETURNING *
     `;
 
-    await notificationService.createNotification(
-      tx,
-      e.requester_id,
-      "EXCHANGE_REJECTED",
-      `Your request for ${e.title} has been rejected`,
-      String(exchangeId)
-    );
+      await notificationService.createNotification(
+        tx,
+        e.requester_id,
+        "EXCHANGE_REJECTED",
+        `Your request for ${e.title} has been rejected`,
+        String(exchangeId),
+      );
 
-    return updated[0];
-  });
-}
-
+      return updated[0];
+    });
+  }
 }
 
 export const exchangeService = new ExchangeService();

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send, ChevronLeft, User, Loader2 } from "lucide-react";
+import { Send, ChevronLeft, User, Loader2, ArrowRightLeft } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import useTestStore from "@/store/tokStore";
 import { getChatMessages, sendMessageApi } from "@/api/chat";
+import { requestExchangeApi } from "@/api/exchage";
+import Swal from "sweetalert2";
 
 const ChatPage = () => {
   const { chatId } = useParams();
@@ -16,13 +18,12 @@ const ChatPage = () => {
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [exchangeLoading, setExchangeLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  // ใช้ ref ป้องกัน Strict Mode รัน 2 รอบ
   const didConnect = useRef(false);
 
-  // --- 1. ดึงประวัติแชท ---
   const fetchMessages = useCallback(async () => {
     if (!chatId || !token) return;
     try {
@@ -37,10 +38,9 @@ const ChatPage = () => {
     }
   }, [chatId, token]);
 
-  // --- 2. WebSocket (แก้ปัญหา Strict Mode + close ก่อน connect) ---
   useEffect(() => {
     if (!chatId || !token) return;
-    if (didConnect.current) return; // ป้องกัน Strict Mode รันซ้ำ
+    if (didConnect.current) return;
     didConnect.current = true;
 
     fetchMessages();
@@ -49,7 +49,6 @@ const ChatPage = () => {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("✅ WebSocket connected");
       setIsConnected(true);
     };
 
@@ -68,17 +67,10 @@ const ChatPage = () => {
       }
     };
 
-    socket.onerror = (err) => {
-      console.error("❌ WebSocket error:", err);
-    };
-
-    socket.onclose = (e) => {
-      console.log("🔌 WebSocket closed:", e.code, e.reason);
-      setIsConnected(false);
-    };
+    socket.onerror = (err) => console.error("WebSocket error:", err);
+    socket.onclose = () => setIsConnected(false);
 
     return () => {
-      // ปิดเฉพาะเมื่อ connect สำเร็จแล้ว ไม่ปิดตอนกำลัง connecting
       didConnect.current = false;
       if (
         socket.readyState === WebSocket.OPEN ||
@@ -90,38 +82,76 @@ const ChatPage = () => {
     };
   }, [chatId, token]);
 
-  // --- 3. Auto scroll ---
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // --- 4. ส่งข้อความ ---
   const handleSend = async () => {
     if (!message.trim() || !chatId || !token) return;
-
     const textToSend = message;
     setMessage("");
-
     try {
       const res = await sendMessageApi(token, chatId, textToSend);
-
-      if (res && res.data) {
-        // ส่งผ่าน WebSocket ให้ server broadcast ให้ทุกคน (รวมตัวเอง)
-        // ไม่ต้อง setMessages เอง เพราะ onmessage จะรับกลับมาเอง
+      if (res?.data) {
         if (socketRef.current?.readyState === WebSocket.OPEN) {
           socketRef.current.send(JSON.stringify(res.data));
         } else {
-          // fallback ถ้า WebSocket ไม่ได้เชื่อมต่อ
           setMessages((prev) => [...prev, res.data]);
         }
       }
     } catch (err) {
-      console.error("Send failed:", err);
+      console.error("Send failed error data:", err?.response?.data); // ← ต้องได้ object เช่น { error: "..." }
+      console.error("Send failed status:", err?.response?.status);
       setMessage(textToSend);
     }
   };
+
+  // ✅ ปุ่มขอแลกอยู่ในแชท — คุยตกลงกันแล้วค่อยกด
+  const handleRequestExchange = async () => {
+    if (!roomInfo?.post_id) return;
+
+    const result = await Swal.fire({
+      title: "ขอแลกเปลี่ยน?",
+      text: `คุณต้องการส่งคำขอแลกเปลี่ยนสำหรับโพสต์ "${roomInfo.post_title}" ใช่ไหม?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#FF5800",
+      cancelButtonColor: "#9ca3af",
+      confirmButtonText: "ขอแลกเลย!",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!result.isConfirmed) return;
+
+    setExchangeLoading(true);
+    try {
+      await requestExchangeApi(token, roomInfo.post_id);
+      Swal.fire({
+        toast: true,
+        position: "bottom",
+        showConfirmButton: false,
+        timer: 3000,
+        icon: "success",
+        title: "ส่งคำขอแลกเปลี่ยนแล้ว! รอเจ้าของโพสต์ตอบรับ",
+      });
+    } catch (err: any) {
+      Swal.fire({
+        toast: true,
+        position: "bottom",
+        showConfirmButton: false,
+        timer: 3000,
+        icon: "error",
+        title: err?.response?.data?.error || "เกิดข้อผิดพลาด",
+      });
+    } finally {
+      setExchangeLoading(false);
+    }
+  };
+
+  // เช็คว่า user คนนี้เป็น buyer (คนที่จะกดขอแลกได้) หรือเปล่า
+  const isBuyer = currentUser?.student_id === roomInfo?.buyer_id;
 
   if (loading)
     return (
@@ -159,16 +189,33 @@ const ChatPage = () => {
               </span>
             </p>
           </div>
-          {/* Status indicator */}
-          <div className="flex items-center gap-1.5">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? "bg-green-400" : "bg-gray-300"
-              }`}
-            />
-            <span className="text-[10px] text-gray-400">
-              {isConnected ? "ออนไลน์" : "กำลังเชื่อมต่อ..."}
-            </span>
+
+          <div className="flex items-center gap-3">
+            {/* ✅ ปุ่มขอแลก — แสดงเฉพาะ buyer */}
+            {isBuyer && (
+              <button
+                onClick={handleRequestExchange}
+                disabled={exchangeLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF5800] text-white text-xs font-black hover:bg-[#e04f00] transition-all active:scale-95 disabled:opacity-50"
+              >
+                {exchangeLoading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <ArrowRightLeft size={14} />
+                )}
+                ขอแลก
+              </button>
+            )}
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-1.5">
+              <div
+                className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-400" : "bg-gray-300"}`}
+              />
+              <span className="text-[10px] text-gray-400">
+                {isConnected ? "ออนไลน์" : "กำลังเชื่อมต่อ..."}
+              </span>
+            </div>
           </div>
         </header>
 
@@ -186,9 +233,7 @@ const ChatPage = () => {
                   className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`flex flex-col max-w-[70%] ${
-                      isMe ? "items-end" : "items-start"
-                    }`}
+                    className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div
                       className={`px-5 py-3 shadow-sm ${
@@ -212,8 +257,15 @@ const ChatPage = () => {
               );
             })
           ) : (
-            <div className="text-center text-gray-400 mt-10 text-sm italic">
-              ยังไม่มีข้อความ... เริ่มคุยกันเลย!
+            <div className="text-center text-gray-400 mt-10 text-sm">
+              <ArrowRightLeft
+                size={32}
+                className="mx-auto mb-3 text-gray-200"
+              />
+              <p className="font-bold">ยังไม่มีข้อความ</p>
+              <p className="text-xs mt-1 text-gray-300">
+                คุยกันก่อน ตกลงใจแล้วค่อยกด "ขอแลก" ด้านบน
+              </p>
             </div>
           )}
         </main>

@@ -28,7 +28,7 @@ app.ws("/ws/chat/:chat_id", {
     const { chat_id } = ws.data.params;
     // ให้ User คนนี้ "Subscribe" เข้าห้องแชทตาม chat_id
     ws.subscribe(`room-${chat_id}`);
-    console.log(`User connected to room: ${chat_id}`);
+    // console.log(`User connected to room: ${chat_id}`);
   },
   message(ws, message: any) {
     const { chat_id } = ws.data.params;
