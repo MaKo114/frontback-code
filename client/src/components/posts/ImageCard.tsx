@@ -34,7 +34,7 @@ const ImageCard = ({ images }: Props) => {
       <CarouselContent>
         {images.map((img) => (
           <CarouselItem key={img.image_id}>
-            <div className="w-full aspect-[4/3] overflow-hidden rounded-xl">
+            <div className="w-full aspect-4/3 overflow-hidden rounded-xl">
               <img
                 src={img.image_url}
                 alt=""
