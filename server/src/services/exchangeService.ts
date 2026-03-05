@@ -247,47 +247,82 @@ export class ExchangeService {
 
   // ปรับ updateStatus เดิม: ให้ owner ทำได้แค่ ACCEPT/REJECT (ไม่ให้ COMPLETED)
   async updateStatus(exchangeId: number, ownerId: number, status: "ACCEPTED" | "REJECTED") {
-    return await sql.begin(async (tx: any) => {
-      const found = await tx`
-        SELECT e.*, p.title
-        FROM "exchange" e
-        JOIN "Post" p ON e.post_id = p.post_id
-        WHERE e.exchange_id = ${exchangeId}
-          AND e.owner_id = ${ownerId}
-        LIMIT 1
-      `;
-      if (found.length === 0) throw new Error("Exchange request not found or you are not the owner");
+  return await sql.begin(async (tx: any) => {
+    const found = await tx`
+      SELECT e.*, p.title
+      FROM "exchange" e
+      JOIN "Post" p ON e.post_id = p.post_id
+      WHERE e.exchange_id = ${exchangeId}
+        AND e.owner_id = ${ownerId}
+      LIMIT 1
+    `;
+    if (found.length === 0) throw new Error("Exchange request not found or you are not the owner");
 
-      const e = found[0];
+    const e = found[0];
+    if (e.status === "COMPLETED") throw new Error("Exchange is already completed");
 
-      // กันเปลี่ยน status หลัง complete
-      if (e.status === "COMPLETED") throw new Error("Exchange is already completed");
-
+    // ถ้า owner ACCEPT -> ยอมรับอันนี้ + ยกเลิก/ปฏิเสธอันอื่นของ post เดียวกัน
+    if (status === "ACCEPTED") {
+      // 1) อัปเดตอันที่เลือกเป็น ACCEPTED
       const updated = await tx`
         UPDATE "exchange"
-        SET status = ${status}, updated_at = NOW()
+        SET status = 'ACCEPTED', updated_at = NOW()
         WHERE exchange_id = ${exchangeId}
         RETURNING *
       `;
 
-      let type = "EXCHANGE_ACCEPTED";
-      let msg = `Your request for ${e.title} has been accepted`;
-      if (status === "REJECTED") {
-        type = "EXCHANGE_REJECTED";
-        msg = `Your request for ${e.title} has been rejected`;
-      }
+      // 2) ปิดคำขออื่นทั้งหมดที่ยัง PENDING (เลือกใช้ CANCELED หรือ REJECTED)
+      const others = await tx`
+        UPDATE "exchange"
+        SET status = 'CANCELED', updated_at = NOW()
+        WHERE post_id = ${e.post_id}
+          AND exchange_id <> ${exchangeId}
+          AND status = 'PENDING'
+        RETURNING exchange_id, requester_id
+      `;
 
+      // 3) แจ้ง requester ที่ถูก accept
       await notificationService.createNotification(
         tx,
         e.requester_id,
-        type,
-        msg,
+        "EXCHANGE_ACCEPTED",
+        `Your request for ${e.title} has been accepted`,
         String(exchangeId)
       );
 
+      // 4) แจ้ง requester คนอื่นว่าถูกยกเลิก
+      for (const o of others) {
+        await notificationService.createNotification(
+          tx,
+          o.requester_id,
+          "EXCHANGE_CANCELED",
+          `Your request for ${e.title} was canceled because the owner accepted another request`,
+          String(o.exchange_id)
+        );
+      }
+
       return updated[0];
-    });
-  }
+    }
+
+    // ถ้า REJECTED -> reject แค่อันนี้
+    const updated = await tx`
+      UPDATE "exchange"
+      SET status = 'REJECTED', updated_at = NOW()
+      WHERE exchange_id = ${exchangeId}
+      RETURNING *
+    `;
+
+    await notificationService.createNotification(
+      tx,
+      e.requester_id,
+      "EXCHANGE_REJECTED",
+      `Your request for ${e.title} has been rejected`,
+      String(exchangeId)
+    );
+
+    return updated[0];
+  });
+}
 
 }
 

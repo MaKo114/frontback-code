@@ -255,7 +255,45 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
         set.status = 403;
         return { error: "Forbidden" };
       }
+      const roomPost = await tx`
+  SELECT cr.post_id, p.status AS post_status
+  FROM "chat_room" cr
+  JOIN "Post" p ON p.post_id = cr.post_id
+  WHERE cr.chat_id = ${chat_id}
+  LIMIT 1
+`;
 
+if (roomPost.length === 0) {
+  set.status = 404;
+  return { error: "Chat room not found" };
+}
+
+if (roomPost[0].post_status === "CLOSED") {
+  set.status = 409;
+  return { error: "Chat is closed because the post is closed" };
+}
+
+// เช็ค exchange ของคู่นี้ในโพสต์นี้ (ถ้ามี)
+const buyerId = room[0].buyer_id;
+const sellerId = room[0].seller_id;
+
+const ex = await tx`
+  SELECT status
+  FROM "exchange"
+  WHERE post_id = ${roomPost[0].post_id}
+    AND owner_id = ${sellerId}
+    AND requester_id = ${buyerId}
+  ORDER BY created_at DESC
+  LIMIT 1
+`;
+
+if (ex.length > 0) {
+  const st = ex[0].status;
+  if (st === "REJECTED" || st === "CANCELED" || st === "COMPLETED") {
+    set.status = 409;
+    return { error: `Chat is closed because exchange is ${st}` };
+  }
+}
       // insert message
       const msgRows = await tx`
         INSERT INTO "message"(chat_id, sender_id, text, created_at)

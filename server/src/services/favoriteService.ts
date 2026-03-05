@@ -49,6 +49,14 @@ export class FavoriteService {
     `;
     return found.length > 0;
   }
+  async getFavoriteCount(postId: number) {
+  const rows = await sql`
+    SELECT COUNT(*)::int AS count
+    FROM "favorite"
+    WHERE post_id = ${postId}
+  `;
+  return rows[0]?.count ?? 0;
+}
 }
 
 export const favoriteService = new FavoriteService();
