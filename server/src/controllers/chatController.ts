@@ -114,7 +114,7 @@ export const getMyChatRooms = async ({ user, set }: any) => {
 
       ORDER BY COALESCE(cr.last_message_at, cr.created_at) DESC
     `;
-    console.log("rooms result:", JSON.stringify(rooms, null, 2));
+    // console.log("rooms result:", JSON.stringify(rooms, null, 2));
     return { data: rooms };
   } catch (err: any) {
     set.status = 500;
