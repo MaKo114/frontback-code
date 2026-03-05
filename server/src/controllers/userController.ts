@@ -24,6 +24,44 @@ export const getUsers = async () => {
   }
 };
 
+// GET /users/:student_id
+export const getUserById = async ({ params, set }: any) => {
+  try {
+    const student_id = Number(params.student_id);
+
+    if (!student_id || Number.isNaN(student_id)) {
+      set.status = 400;
+      return { message: "Invalid student_id" };
+    }
+
+    const user = await sql`
+      SELECT 
+        student_id, 
+        first_name, 
+        last_name, 
+        email, 
+        role, 
+        status, 
+        created_at, 
+        updated_at
+      FROM "User"
+      WHERE student_id = ${student_id}
+      LIMIT 1
+    `;
+
+    if (user.length === 0) {
+      set.status = 404;
+      return { message: "User not found" };
+    }
+
+    set.status = 200;
+    return user[0]; // ส่ง Object user ออกไปตรงๆ
+  } catch (err) {
+    set.status = 500;
+    return { message: "Internal Server Error", error: err };
+  }
+};
+
 // POST /users  (สำหรับ admin สร้าง user หรือใช้ทดสอบ)
 // body: { first_name, last_name, email, password, role?, status? }
 export const createUser = async ({ body, set }: any) => {

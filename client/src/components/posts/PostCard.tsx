@@ -5,6 +5,8 @@ import MoreDot from "@/components/posts/MoreDot";
 import ImageCard from "@/components/posts/ImageCard";
 import PostComments from "@/components/posts/PostComments";
 import { useNavigate } from "react-router-dom";
+import { createChat } from "@/api/chat";
+import useTestStore from "@/store/tokStore";
 
 interface PostCardProps {
   post: any;
@@ -13,6 +15,18 @@ interface PostCardProps {
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const token = useTestStore((state) => state.token);
+  const user = useTestStore((state) => state.user);
+
+  const handleChat = async (post_id: number) => {
+    try {
+      const res = await createChat(token, post_id);
+      const chatId = res.data.data.chat_id;
+      navigate(`/user/chat/${chatId}`); // ✅ absolute path
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="rounded-[24px] bg-white border border-gray-50 p-6 shadow-sm hover:shadow-md transition-all duration-300">
@@ -89,13 +103,17 @@ const PostCard = ({ post }: PostCardProps) => {
           </button>
         </div>
 
-        <button
+        {
+          user.student_id === post.student_id ? <></> : <button
           className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-gray-200 hover:bg-[#FF5800] transition-all active:scale-95"
-          onClick={() => navigate("/chat")}
+          onClick={() => {
+            handleChat(post.post_id);
+          }}
         >
           <SendHorizonal size={16} />
           เริ่มแชทเลย
         </button>
+        }
       </div>
 
       {/* Comment Section */}

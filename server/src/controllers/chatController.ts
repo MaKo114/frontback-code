@@ -79,6 +79,10 @@ export const getMyChatRooms = async ({ user, set }: any) => {
       return { error: "Please login first" };
     }
 
+    const uid = user.student_id; // number จาก postgres.js อยู่แล้ว
+
+    // ใช้ JOIN กับ subquery แทน CASE WHEN ที่มี parameter
+    // เพราะ postgres.js template literal ไม่ส่ง param เข้า CASE WHEN ได้ถูกต้อง
     const rooms = await sql`
       SELECT
         cr.chat_id,
@@ -87,40 +91,37 @@ export const getMyChatRooms = async ({ user, set }: any) => {
         cr.seller_id,
         cr.created_at,
         cr.last_message_at,
-
         p.title AS post_title,
 
-        -- คู่สนทนา (อีกฝั่ง)
-        CASE
-          WHEN cr.buyer_id = ${user.student_id} THEN seller.email
-          ELSE buyer.email
-        END AS other_email,
-
-        CASE
-          WHEN cr.buyer_id = ${user.student_id} THEN seller.first_name
-          ELSE buyer.first_name
-        END AS other_first_name,
-
-        CASE
-          WHEN cr.buyer_id = ${user.student_id} THEN seller.last_name
-          ELSE buyer.last_name
-        END AS other_last_name
+        -- ดึง other user โดยตรงจาก JOIN
+        other_user.email       AS other_email,
+        other_user.first_name  AS other_first_name,
+        other_user.last_name   AS other_last_name
 
       FROM "chat_room" cr
       JOIN "Post" p ON p.post_id = cr.post_id
-      JOIN "User" buyer ON buyer.student_id = cr.buyer_id
-      JOIN "User" seller ON seller.student_id = cr.seller_id
-      WHERE cr.buyer_id = ${user.student_id}
-         OR cr.seller_id = ${user.student_id}
+
+      -- JOIN หา "อีกฝั่ง" โดยตรง ไม่ต้องใช้ CASE WHEN
+      JOIN "User" other_user ON other_user.student_id = (
+        CASE
+          WHEN cr.buyer_id = ${uid} THEN cr.seller_id
+          ELSE cr.buyer_id
+        END
+      )
+
+      WHERE cr.buyer_id  = ${uid}
+         OR cr.seller_id = ${uid}
+
       ORDER BY COALESCE(cr.last_message_at, cr.created_at) DESC
     `;
-
+    console.log("rooms result:", JSON.stringify(rooms, null, 2));
     return { data: rooms };
   } catch (err: any) {
     set.status = 500;
     return { error: err.message };
   }
 };
+
 
 // GET /chat/rooms/:chat_id/messages  (ข้อความในห้อง)
 export const getMessagesByRoom = async ({ params, user, set }: any) => {
@@ -150,7 +151,8 @@ export const getMessagesByRoom = async ({ params, user, set }: any) => {
     }
 
     const isMember =
-      room[0].buyer_id === user.student_id || room[0].seller_id === user.student_id;
+      room[0].buyer_id === user.student_id ||
+      room[0].seller_id === user.student_id;
 
     if (!isMember) {
       set.status = 403;
@@ -172,8 +174,32 @@ export const getMessagesByRoom = async ({ params, user, set }: any) => {
       WHERE m.chat_id = ${chat_id}
       ORDER BY m.created_at ASC
     `;
+    const roomInfo = await sql`
+      SELECT 
+        p.title as post_title,
+        -- ดึงทั้งชื่อและนามสกุลของคู่สนทนา
+        CASE 
+          WHEN cr.buyer_id = ${user.student_id} THEN seller.first_name 
+          ELSE buyer.first_name 
+        END AS other_name,
+        
+        CASE 
+          WHEN cr.buyer_id = ${user.student_id} THEN seller.last_name 
+          ELSE buyer.last_name 
+        END AS other_last_name -- 👈 เพิ่มบรรทัดนี้เข้าไปครับ!
+        
+      FROM "chat_room" cr
+      JOIN "Post" p ON p.post_id = cr.post_id
+      JOIN "User" buyer ON buyer.student_id = cr.buyer_id
+      JOIN "User" seller ON seller.student_id = cr.seller_id
+      WHERE cr.chat_id = ${chat_id}
+      LIMIT 1
+    `;
 
-    return { data: messages };
+    return {
+      data: messages,
+      room_info: roomInfo[0],
+    };
   } catch (err: any) {
     set.status = 500;
     return { error: err.message };
@@ -222,7 +248,8 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
       }
 
       const isMember =
-        room[0].buyer_id === user.student_id || room[0].seller_id === user.student_id;
+        room[0].buyer_id === user.student_id ||
+        room[0].seller_id === user.student_id;
 
       if (!isMember) {
         set.status = 403;

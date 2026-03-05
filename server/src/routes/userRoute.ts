@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import {
   createUser,
   deleteUserById,
+  getUserById,
   getUsers,
   updataUserById,
 } from "../controllers/userController";
@@ -72,6 +73,7 @@ useRoutes.delete("/categories/:category_id", deleteCategory, { beforeHandle: [au
 
 // user
 useRoutes.get("/users", getUsers, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.get("/user/:student_id", getUserById, { beforeHandle: authCheck });
 useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });

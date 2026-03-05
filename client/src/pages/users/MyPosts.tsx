@@ -29,7 +29,7 @@ const MyPosts = () => {
 
       {/* --- Profile Section --- */}
       <div className="mx-auto max-w-2xl bg-white shadow-sm border-b border-gray-100">
-        <div className="relative h-44 bg-gradient-to-br from-[#FFB800] via-[#FF8A00] to-[#FF5800] overflow-hidden">
+        <div className="relative h-44 bg-linear-to-br from-[#FFB800] via-[#FF8A00] to-[#FF5800] overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cuisines.png')]"></div>
         </div>
 

@@ -6,17 +6,19 @@ import PostDialog from "@/components/posts/PostDialog";
 import usePostStore from "@/store/postStore";
 import PostCard from "@/components/posts/PostCard";
 import SideBar from "@/layouts/SideBar";
+import useTestStore from "@/store/tokStore";
 
 
 const HomePage = () => {
   const fetchPosts = usePostStore((state) => state.fetchPosts);
   const posts = usePostStore((state) => state.posts);
+  const getUserInformation = useTestStore((state) => state.getUserInformation)
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  // const token: any = useTestStore((s) => s.token);
 
   useEffect(() => {
     fetchPosts();
+    getUserInformation()
   }, [posts]);
 
   const filteredPosts = posts.filter(
