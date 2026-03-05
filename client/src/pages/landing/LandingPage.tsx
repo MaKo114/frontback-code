@@ -21,20 +21,19 @@ const LandingPage = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3.5 py-1 text-xs font-bold text-[#FF5800] mb-6 border border-orange-100">
             <Zap size={14} />
-            <span className="uppercase tracking-wider">KMITL Community Platform</span>
+            <span className="uppercase tracking-wider">แลกเปลี่ยนสิ่งของ</span>
           </div>
 
           {/* ปรับขนาดจาก 7xl -> 6xl และบีบ max-w */}
           <h1 className="mx-auto max-w-3xl text-4xl font-black tracking-tight sm:text-6xl leading-[1.1]">
-            เชื่อมต่อทุกความเห็น <br />
+            ส่งต่อความช่วยเหลือ <br />
             <span className="bg-gradient-to-r from-[#FFB800] to-[#FF5800] bg-clip-text text-transparent">
               ฉบับเด็กสจล.
             </span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base font-medium text-gray-500 leading-relaxed">
-            แพลตฟอร์มที่รวมทุกเรื่องราวในรั้วแคแสด ไม่ว่าจะหาเพื่อนติว
-            ปรึกษาโปรเจกต์ หรือแลกเปลี่ยนประสบการณ์ ทุกอย่างจบได้ที่นี่
+            แพลตฟอร์มที่รวบรวมสิ่งของเครื่องใช้และเครื่องมือหลากหลายรูปแบบ ที่มาจากรุ่นพี่ หรือรุ่นน้อง หรือแม้แต่จากเพื่อนๆในสถาบัน
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -73,7 +72,7 @@ const LandingPage = () => {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-black text-gray-900 sm:text-3xl tracking-tight">
-              ทำไมต้อง KMITL CONNECT?
+              ทำไมต้อง KMITL TRADER?
             </h2>
             <p className="mt-3 text-sm text-gray-400 font-medium">
               ออกแบบมาเพื่อตอบโจทย์ชีวิตนักศึกษาโดยเฉพาะ
@@ -123,11 +122,11 @@ const LandingPage = () => {
           <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FFB800] to-[#FF5800] px-6 py-10 text-center text-white shadow-xl shadow-orange-100">
             <div className="relative z-10">
               <h2 className="text-xl font-black sm:text-3xl mb-3 tracking-tight">
-                พร้อมเริ่มแชร์หรือยัง?
+                พร้อมแลกเปลี่ยนหรือยัง?
               </h2>
               <p className="mx-auto max-w-md text-orange-50 font-medium mb-7 text-xs sm:text-sm opacity-90 leading-relaxed">
                 สมัครสมาชิกวันนี้เพื่อรับประสบการณ์การใช้งานที่ลื่นไหล
-                และไม่พลาดทุกข่าวสารในรั้ว สจล.
+                และหาตัวช่วยที่เหมาะสมในรั้ว สจล.
               </p>
 
               <Link

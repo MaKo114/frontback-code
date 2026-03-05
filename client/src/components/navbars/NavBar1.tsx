@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { LogIn, UserPlus, Home } from "lucide-react";
 import NavLink from "../../layouts/NavLink";
+import logo from '../../assets/logo/logo-removebg-preview 3.png';
 
 const Navbar1 = () => {
   return (
@@ -9,12 +10,15 @@ const Navbar1 = () => {
         
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFB800] to-[#FF5800] text-white shadow-lg shadow-orange-200 transition-transform group-hover:scale-105">
-            <Home size={22} strokeWidth={2.5} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-white shadow-lg shadow-orange-200 transition-transform group-hover:scale-105">
+            {/* <Home size={22} strokeWidth={2.5} /> */}
+            <img
+              src={logo} 
+            />
           </div>
           <div className="hidden sm:block">
             <p className="text-lg font-black leading-none tracking-tighter text-gray-900">
-              KMITL<span className="text-[#FF5800]">CONNECT</span>
+              KMITL <span className="text-[#FF5800]">TRADER</span>
             </p>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Community</p>
           </div>
