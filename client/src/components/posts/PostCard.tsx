@@ -130,8 +130,7 @@ const PostCard = ({ post }: PostCardProps) => {
                 className={`transition-transform ${favLoading ? "scale-90 opacity-50" : "scale-100"}`} />
             </div>
             <div className="flex flex-col items-start leading-none">
-              <span className="text-xs font-bold">{isFavorite ? "ถูกใจแล้ว" : "ถูกใจ"}</span>
-              {favCount > 0 && <span className="text-[10px] font-medium opacity-70 mt-0.5">{favCount} คน</span>}
+              {favCount > 0 && <span className="text-[10px] font-medium opacity-70 mt-0.5">{favCount}</span>}
             </div>
           </button>
 
@@ -141,7 +140,7 @@ const PostCard = ({ post }: PostCardProps) => {
             <div className={`p-2 rounded-full transition-colors ${isCommentsOpen ? "bg-orange-50" : "group-hover:bg-orange-50"}`}>
               <MessageCircle size={20} />
             </div>
-            <span className="text-xs font-bold">แสดงความคิดเห็น</span>
+            <span className="text-xs font-bold">ความคิดเห็น</span>
           </button>
         </div>
 
