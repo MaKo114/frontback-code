@@ -6,23 +6,24 @@ import PostDialog from "@/components/posts/PostDialog";
 import usePostStore from "@/store/postStore";
 import PostCard from "@/components/posts/PostCard";
 import SideBar from "@/layouts/SideBar";
-
+import useTestStore from "@/store/tokStore";
 
 const HomePage = () => {
   const fetchPosts = usePostStore((state) => state.fetchPosts);
   const posts = usePostStore((state) => state.posts);
+  const getUserInformation = useTestStore((state) => state.getUserInformation);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  // const token: any = useTestStore((s) => s.token);
 
   useEffect(() => {
     fetchPosts();
+    getUserInformation();
   }, [posts]);
 
   const filteredPosts = posts.filter(
     (post: any) =>
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchQuery.toLowerCase())
+      post.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -42,19 +43,26 @@ const HomePage = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-4xl border-none bg-white py-4 pl-12 pr-6 text-sm shadow-sm outline-none ring-1 ring-gray-100 focus:ring-2 focus:ring-[#FF5800]/50 transition-all"
             />
-            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF5800] transition-colors" />
+            <Search
+              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF5800] transition-colors"
+            />
           </div>
 
           {/* Posts List */}
           <div className="space-y-6">
             {filteredPosts.length > 0 ? (
-              filteredPosts.map((post: any) => (
-                <PostCard key={post.post_id} post={post} />
-              ))
+              filteredPosts.map((post: any) =>
+                post.status === "CLOSED" ? null : (
+                  <PostCard key={post.post_id} post={post} />
+                ),
+              )
             ) : (
               <div className="text-center py-20 bg-white rounded-[24px] border border-dashed border-gray-200">
                 <Search size={30} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500 font-bold">ไม่พบโพสต์ที่คุณกำลังมองหา</p>
+                <p className="text-gray-500 font-bold">
+                  ไม่พบโพสต์ที่คุณกำลังมองหา
+                </p>
               </div>
             )}
           </div>

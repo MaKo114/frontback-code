@@ -1,6 +1,19 @@
 import axios from "axios";
 
 
+export const getInformation = async (token: string, student_id: number) => {
+  try{
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/${Number(student_id)}`, {
+        headers:{
+            Authorization: `Bearer ${token}`
+        }
+    })
+    return res
+  }catch(err){
+    console.log(err);
+  }
+}
+
 export const getAllUser = async(token: string) => {
     try{
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {

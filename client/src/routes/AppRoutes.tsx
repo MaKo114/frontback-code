@@ -1,9 +1,8 @@
-import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import HomePage from "../pages/home/HomePage";
 import LayoutUser from "../layouts/LayoutUser";
-import MyPosts from "../pages/users/MyPosts";
 import EditProfile from "../pages/users/EditProfile";
 import LayoutAdmin from "../layouts/LayoutAdmin";
 import AdminReport from "../pages/admins/AdminReport";
@@ -16,6 +15,8 @@ import ProtectRouteAdmin from "./ProtectRouteAdmin";
 import Layout from "@/layouts/Layout";
 import ChatListPage from "@/pages/users/ChatList";
 import LandingPage from "@/pages/landing/LandingPage";
+import ExchangePage from "@/pages/users/Exchange";
+import MyPostPage from "@/pages/users/MyPostPage";
 
 const router = createBrowserRouter([
   {
@@ -32,11 +33,11 @@ const router = createBrowserRouter([
     element: <ProtectRouteUser element={<LayoutUser />}/>,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "my-posts", element: <MyPosts /> },
+      { path: "my-posts", element: <MyPostPage /> },
       { path: "edit-profile", element: <EditProfile /> },
-      { path: "chat", element: <ChatPage /> },
+      { path: "chat/:chatId", element: <ChatPage /> },
       { path: "chat-list", element: <ChatListPage /> },
-
+      { path: "exchanges", element: <ExchangePage /> },
     ],
   },
   {

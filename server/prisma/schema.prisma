@@ -28,6 +28,7 @@ model User {
   sentMessages      Message[]      @relation("UserMessages")
   reports           Report[]       @relation("UserReports")
   notifications     Notification[] @relation("UserNotifications")
+  comments Comment[] @relation("UserComments")
 }
 
 model Post {
@@ -45,6 +46,7 @@ model Post {
   categories  PostCategory[]
   images      PostImage[]
   reports     Report[]
+  comments Comment[] @relation("PostComments")
 }
 
 model Category {
@@ -162,7 +164,21 @@ model Notification {
   @@index([created_at])
   @@map("notifications")
 }
+model Comment {
+  comment_id Int      @id @default(autoincrement())
+  post_id    Int
+  user_id    Int
+  text       String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
 
+  post Post @relation("PostComments", fields: [post_id], references: [post_id], onDelete: Cascade)
+  user User @relation("UserComments", fields: [user_id], references: [student_id], onDelete: Cascade)
+
+  @@index([post_id])
+  @@index([user_id])
+  @@map("comment")
+}
 enum Role {
   ADMIN
   USER

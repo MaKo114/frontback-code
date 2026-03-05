@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import {
   createUser,
   deleteUserById,
+  getUserById,
   getUsers,
   updataUserById,
 } from "../controllers/userController";
@@ -24,7 +25,7 @@ import {search} from "../controllers/searchController";
 import { createReport } from "../controllers/reportController";
 import { getNotifications, markAllAsRead, markAsRead } from "../controllers/notificationController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
-import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite } from "../controllers/favoriteController";
+import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite,getPostFavoriteCount } from "../controllers/favoriteController";
 import {
   createExchangeRequest,
   getMyReceivedRequests,
@@ -33,6 +34,12 @@ import {
   ownerConfirmExchange,
   requesterConfirmExchange,
 } from "../controllers/exchangeController";
+import {
+  createComment,
+  getCommentsByPost,
+  updateComment,
+  deleteComment,
+} from "../controllers/commentController";
 export const useRoutes = new Elysia();
 
 
@@ -72,6 +79,7 @@ useRoutes.delete("/categories/:category_id", deleteCategory, { beforeHandle: [au
 
 // user
 useRoutes.get("/users", getUsers, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.get("/user/:student_id", getUserById, { beforeHandle: authCheck });
 useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });
@@ -105,6 +113,7 @@ useRoutes.post("/favorites", addFavorite, { beforeHandle: authCheck });
 useRoutes.delete("/favorites/:post_id", removeFavorite, { beforeHandle: authCheck });
 useRoutes.get("/favorites", getMyFavorites, { beforeHandle: authCheck });
 useRoutes.get("/favorites/check/:post_id", checkIsFavorite, { beforeHandle: authCheck });
+useRoutes.get("/posts/:post_id/favorites/count", getPostFavoriteCount);
 
 // exchange
 useRoutes.post("/exchanges/request", createExchangeRequest, { beforeHandle: authCheck });
@@ -113,3 +122,11 @@ useRoutes.get("/exchanges/sent", getMySentRequests, { beforeHandle: authCheck })
 useRoutes.get("/exchanges/received", getMyReceivedRequests, { beforeHandle: authCheck });
 useRoutes.post("/exchanges/:exchange_id/owner-confirm", ownerConfirmExchange, { beforeHandle: authCheck });
 useRoutes.post("/exchanges/:exchange_id/requester-confirm", requesterConfirmExchange, { beforeHandle: authCheck });
+
+// comments ของ post
+useRoutes.get("/posts/:post_id/comments", getCommentsByPost);
+useRoutes.post("/posts/:post_id/comments", createComment, { beforeHandle: authCheck });
+
+// แก้/ลบ comment รายตัว
+useRoutes.put("/comments/:comment_id", updateComment, { beforeHandle: authCheck });
+useRoutes.delete("/comments/:comment_id", deleteComment, { beforeHandle: authCheck });
