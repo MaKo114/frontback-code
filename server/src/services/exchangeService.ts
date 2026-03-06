@@ -24,13 +24,23 @@ export class ExchangeService {
         throw new Error("You cannot request your own post");
 
       // กันซ้ำ
-      const existing = await tx`
-        SELECT exchange_id FROM "exchange" 
-        WHERE post_id = ${postId} AND requester_id = ${requesterId} AND status = 'PENDING'
-      `;
-      if (existing.length > 0)
-        throw new Error("You already have a pending request");
+      const existingActive = await tx`
+  SELECT exchange_id, status
+  FROM "exchange"
+  WHERE post_id = ${postId}
+    AND requester_id = ${requesterId}
+    AND owner_id = ${ownerId}
+    AND status IN ('PENDING','ACCEPTED','COMPLETED')
+  ORDER BY created_at DESC
+  LIMIT 1
+`;
 
+      if (existingActive.length > 0) {
+        const st = existingActive[0].status;
+        if (st === "PENDING") throw new Error("You already have a pending request");
+        if (st === "ACCEPTED") throw new Error("You already have an accepted request for this post");
+        if (st === "COMPLETED") throw new Error("This exchange is already completed");
+      }
       const exchange = await tx`
         INSERT INTO "exchange" (post_id, requester_id, owner_id, status, created_at, updated_at)
         VALUES (${postId}, ${requesterId}, ${ownerId}, 'PENDING', NOW(), NOW())
