@@ -17,6 +17,7 @@ import ChatListPage from "@/pages/users/ChatList";
 import LandingPage from "@/pages/landing/LandingPage";
 import ExchangePage from "@/pages/users/Exchange";
 import MyPostPage from "@/pages/users/MyPostPage";
+import PostDetailPage from "@/pages/users/PostDetail";
 
 const router = createBrowserRouter([
   {
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
       { path: "chat/:chatId", element: <ChatPage /> },
       { path: "chat-list", element: <ChatListPage /> },
       { path: "exchanges", element: <ExchangePage /> },
+      { path: "post/:post_id", element: <PostDetailPage /> },
     ],
   },
   {
@@ -48,6 +50,7 @@ const router = createBrowserRouter([
       { path: "reports", element: <AdminReport /> },
       { path: "users", element: <AdminUsers /> },
       { path: "categories", element: <AdminCategories /> },
+      { path: "post/:post_id", element: <PostDetailPage /> },
     ],
   },
 ]);

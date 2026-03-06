@@ -6,35 +6,22 @@ import { getCategories } from "@/api/category";
 import { getInformation } from "@/api/user";
 // import { getCategories } from "@/api/category";
 
-// กำหนด type ของ store
 interface TestState {
   user: any | null;
   token: string;
   categories: any[];
-  userInformation: Information | null;
+  // ✅ 1. เปลี่ยนชื่อใน Interface ให้ตรงกับที่ Navbar ใช้
+  userInformation: any | null; 
   actionLogin: (form: loginForm) => Promise<AxiosResponse<any> | void>;
   fetchCategories: () => Promise<void>;
   actionLogOut: () => void;
   getUserInformation: () => Promise<AxiosResponse<any> | void>;
 }
-
-interface Information {
-  userInformation: {
-    student_id: number
-    first_name: string
-    last_name: string
-    email: string
-    role: string
-    status: string
-    created_at: string
-    updated_at: string
-  },
-}
 // สร้าง store
 const testStore: StateCreator<TestState> = (set, get) => ({
   user: null,
   token: "",
-  userInformation: null,
+  userInformation: null, // ✅ 2. เริ่มต้นเป็น null (Navbar จะได้ไม่พังตอนโหลด)
   categories: [],
   actionLogin: async (form: loginForm) => {
     try {
@@ -68,18 +55,16 @@ const testStore: StateCreator<TestState> = (set, get) => ({
   },
 
   getUserInformation: async () => {
-    try{
+    try {
       const token = get().token;
-      const student_id = get().user.student_id
-      const res = await getInformation(token, student_id)
-      set({
-        userInformation: res.data
-      })
-      return res
-    }catch(err){
+      const student_id = get().user.student_id;
+      const res = await getInformation(token, student_id);
+      set({ userInformation: res.data });
+      return res;
+    } catch (err) {
       console.log(err);
     }
-  }
+  },
 });
 
 const userPersist = {

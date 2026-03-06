@@ -18,7 +18,13 @@ const HomePage = () => {
   useEffect(() => {
     fetchPosts();
     getUserInformation();
-  }, [posts]);
+    // poll ทุก 10 วินาที
+    const interval = setInterval(() => {
+      fetchPosts();
+    }, 10000);
+
+    return () => clearInterval(interval); // cleanup
+  }, []);
 
   const filteredPosts = posts.filter(
     (post: any) =>

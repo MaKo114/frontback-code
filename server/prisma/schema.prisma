@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,6 +16,10 @@ model User {
   first_name        String
   last_name         String
   phone_number      String?
+  profile_img       String?
+  cover_img         String?
+  profile_public_id String?
+  cover_public_id   String?
   status            UserStatus     @default(ACTIVE)
   student_id        Int            @id @default(autoincrement())
   updated_at        DateTime       @default(now()) @updatedAt
@@ -28,7 +33,7 @@ model User {
   sentMessages      Message[]      @relation("UserMessages")
   reports           Report[]       @relation("UserReports")
   notifications     Notification[] @relation("UserNotifications")
-  comments Comment[] @relation("UserComments")
+  comments          Comment[]      @relation("UserComments")
 }
 
 model Post {
@@ -46,7 +51,7 @@ model Post {
   categories  PostCategory[]
   images      PostImage[]
   reports     Report[]
-  comments Comment[] @relation("PostComments")
+  comments    Comment[]      @relation("PostComments")
 }
 
 model Category {
@@ -109,8 +114,8 @@ model ChatRoom {
   post_id         Int
   buyer_id        Int
   seller_id       Int
-  created_at      DateTime  @default(now())
-  last_message_at DateTime?
+  created_at      DateTime  @default(now()) @db.Timestamptz(3)
+  last_message_at DateTime? @db.Timestamptz(3)
   buyer           User      @relation("ChatBuyer", fields: [buyer_id], references: [student_id], onDelete: Cascade)
   post            Post      @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
   seller          User      @relation("ChatSeller", fields: [seller_id], references: [student_id], onDelete: Cascade)
@@ -124,7 +129,8 @@ model Message {
   chat_id    Int
   sender_id  Int
   text       String
-  created_at DateTime @default(now())
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(3)
   chat       ChatRoom @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade)
   sender     User     @relation("UserMessages", fields: [sender_id], references: [student_id], onDelete: Cascade)
 
@@ -164,6 +170,7 @@ model Notification {
   @@index([created_at])
   @@map("notifications")
 }
+
 model Comment {
   comment_id Int      @id @default(autoincrement())
   post_id    Int
@@ -179,6 +186,7 @@ model Comment {
   @@index([user_id])
   @@map("comment")
 }
+
 enum Role {
   ADMIN
   USER

@@ -141,6 +141,8 @@ const ExchangePage = () => {
 
   const goToChat = async (ex: any) => {
     try {
+      console.log(ex);
+      
       if (ex.chat_id) {
         // มีห้องอยู่แล้ว → ทั้ง buyer และ seller ไปได้เลย
         navigate(`/user/chat/${ex.chat_id}`);

@@ -67,12 +67,26 @@ export const getMyPost = async (token: string) => {
     console.log(err);
   }
 };
+/* ================= USER PROFILE ================= */
 
-// export const reportPost = async (token: string, post_id: number) => {
-//   try{
-//     const res = await axios.get(`${API}/post`)
-//   }catch(err){
-//     console.log(err);
+// 1. API สำหรับอัปเดตข้อมูล Profile (ชื่อ, เบอร์, รูปภาพ URL)
+export const updateProfileApi = (token: string, data: any) => {
+  return axios.put(`${API}/update-profile`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
 
-//   }
-// }
+// 2. API สำหรับดึงข้อมูล Profile ของตัวเอง (เอามาโชว์ใน Input ตอนโหลดหน้า Edit)
+export const getMyProfileApi = (token: string) => {
+  return axios.get(`${API}/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+/* ================= GET POST BY ID (เพิ่มอันนี้เข้าไปครับ) ================= */
+
+export const getPostByIdApi = (token: string, post_id: number) => {
+  return axios.get(`${API}/posts/${post_id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+};

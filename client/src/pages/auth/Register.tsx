@@ -2,22 +2,22 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Title from "../../titles/Title";
 import { User, Phone, Calendar, Mail, Lock, UserPlus } from "lucide-react";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import axios from "axios";
 
-  interface registerForm {
-    first_name: string;
-    last_name: string;
-    phone_number: string;
-    birth_date: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }
+interface registerForm {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  birth_date: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const Register = () => {
-  const navigate = useNavigate()
-  const API = import.meta.env.VITE_API_URL
+  const navigate = useNavigate();
+  const API = import.meta.env.VITE_API_URL;
 
   const [information, setInformation] = useState<registerForm>({
     first_name: "",
@@ -26,79 +26,105 @@ const Register = () => {
     birth_date: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInformation({
       ...information,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
-const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  
-  // 1. เช็ครหัสผ่านไม่ตรงกัน
-  if (information.password !== information.confirmPassword) {
-    Swal.fire({
-      icon: "error",
-      title: "รหัสผ่านไม่ตรงกัน",
-      text: "กรุณาตรวจสอบและกรอกรหัสผ่านใหม่อีกครั้ง",
-      confirmButtonColor: "#FF5800", // สีส้มตาม Theme เรา
-      confirmButtonText: "ตกลง",
-    });
-    return;
-  }
+  const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  // console.log(information);
-  try {
-    // แสดง Loading ระหว่างรอ API (Optional)
-    Swal.fire({
-      title: 'กำลังลงทะเบียน...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
+    // 1. ตรวจสอบรูปแบบอีเมลนักศึกษา (รหัส 8 หลัก @kmitl.ac.th)
+    // เงื่อนไข: ขึ้นต้นด้วย 60 ถึงปีปัจจุบัน (69)
+    const currentYearShort = new Date().getFullYear() + 43; // 2026 + 43 = 69 (พ.ศ. 2569)
+    const emailRegex = new RegExp(
+      `^(6[0-${currentYearShort % 10}])[0-9]{6}@kmitl\\.ac\\.th$`,
+    );
 
-    // สมมติว่าเรียก API ตรงนี้
-    const res = await axios.post(`${API}/register`, information);
-    
-    // 2. สมัครสำเร็จ
-    Swal.fire({
-      icon: "success",
-      title: "ลงทะเบียนสำเร็จ!",
-      text: "ยินดีต้อนรับเข้าสู่ KMITL CONNECT",
-      confirmButtonColor: "#FF5800",
-      confirmButtonText: "ไปหน้าเข้าสู่ระบบ",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigate("/login");
-      }
-    });
+    if (!emailRegex.test(information.email)) {
+      Swal.fire({
+        icon: "error",
+        title: "อีเมลไม่ถูกต้อง",
+        text: `กรุณาใช้อีเมลนักศึกษา 8 หลัก`,
+        confirmButtonColor: "#FF5800",
+      });
+      return;
+    }
 
-    
+    // 2. เช็ครหัสผ่านไม่ตรงกัน
+    if (information.password !== information.confirmPassword) {
+      Swal.fire({
+        icon: "error",
+        title: "รหัสผ่านไม่ตรงกัน",
+        text: "กรุณาตรวจสอบและกรอกรหัสผ่านใหม่อีกครั้ง",
+        confirmButtonColor: "#FF5800",
+        confirmButtonText: "ตกลง",
+      });
+      return;
+    }
 
-  } catch (err) {
-    // 3. กรณี Error จาก Server (เช่น อีเมลซ้ำ)
-    Swal.fire({
-      icon: "error",
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถลงทะเบียนได้ในขณะนี้",
-      confirmButtonColor: "#FF5800",
-    });
-  }
-};
+    // 3. ตรวจสอบความยาวรหัสผ่าน (แถมให้เพื่อความปลอดภัย)
+    if (information.password.length < 6) {
+      Swal.fire({
+        icon: "warning",
+        title: "รหัสผ่านสั้นเกินไป",
+        text: "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร",
+        confirmButtonColor: "#FF5800",
+      });
+      return;
+    }
+
+    try {
+      Swal.fire({
+        title: "กำลังลงทะเบียน...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      // ส่งข้อมูลไปยัง API (ลบ confirmPassword ออกก่อนส่งเพื่อความคลีน)
+      const { confirmPassword, ...dataToSend } = information;
+      const res = await axios.post(`${API}/register`, dataToSend);
+
+      Swal.fire({
+        icon: "success",
+        title: "ลงทะเบียนสำเร็จ!",
+        text: "ยินดีต้อนรับเข้าสู่ KMITL CONNECT",
+        confirmButtonColor: "#FF5800",
+        confirmButtonText: "ไปหน้าเข้าสู่ระบบ",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "ลงทะเบียนไม่สำเร็จ",
+        text:
+          err.response?.data?.message ||
+          "อีเมลนี้อาจถูกใช้งานไปแล้ว หรือระบบขัดข้อง",
+        confirmButtonColor: "#FF5800",
+      });
+    }
+  };
 
   // Helper สำหรับสไตล์ของ Input
-  const inputStyle = "w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-sm outline-none ring-2 ring-transparent focus:ring-[#FF5800]/10 focus:border-[#FF5800] focus:bg-white transition-all placeholder:text-gray-300";
-  const labelStyle = "text-xs font-black text-gray-700 uppercase tracking-wider ml-1 mb-1 block";
+  const inputStyle =
+    "w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-sm outline-none ring-2 ring-transparent focus:ring-[#FF5800]/10 focus:border-[#FF5800] focus:bg-white transition-all placeholder:text-gray-300";
+  const labelStyle =
+    "text-xs font-black text-gray-700 uppercase tracking-wider ml-1 mb-1 block";
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-4 py-12 font-['Inter',_sans-serif]">
       <Title />
-      
+
       <div className="bg-white mt-8 p-8 sm:p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 w-full max-w-2xl">
         <div className="text-center mb-10">
           <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">
@@ -165,9 +191,9 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <div className="absolute top-[34px] left-4 text-gray-400 group-focus-within:text-[#FF5800] transition-colors">
                 <Calendar size={18} />
               </div>
-              <input 
+              <input
                 className={inputStyle}
-                type="date" 
+                type="date"
                 name="birth_date"
                 required
                 onChange={handleOnChange}
@@ -183,7 +209,7 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </div>
             <input
               className={inputStyle}
-              placeholder="name@kmitl.ac.th"
+              placeholder="xxxxxxxx@kmitl.ac.th"
               type="email"
               name="email"
               required
@@ -224,14 +250,17 @@ const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </div>
           </div>
 
-          <button className="flex items-center justify-center gap-2 text-white bg-gradient-to-r from-[#FFB800] to-[#FF5800] font-black rounded-2xl w-full py-4 shadow-[0_10px_20px_rgba(255,88,0,0.2)] hover:shadow-[0_15px_25px_rgba(255,88,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all mt-6">
+          <button className="flex items-center justify-center gap-2 text-white bg-linear-to-r from-[#FFB800] to-[#FF5800] font-black rounded-2xl w-full py-4 shadow-[0_10px_20px_rgba(255,88,0,0.2)] hover:shadow-[0_15px_25px_rgba(255,88,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all mt-6">
             <UserPlus size={20} strokeWidth={3} />
             สมัครสมาชิก
           </button>
 
           <p className="text-center text-gray-500 mt-6 font-medium text-sm">
             เป็นสมาชิกอยู่แล้วใช่ไหม?{" "}
-            <Link to={"/login"} className="text-[#FF5800] hover:text-[#E64A00] font-black underline underline-offset-4 transition-colors">
+            <Link
+              to={"/login"}
+              className="text-[#FF5800] hover:text-[#E64A00] font-black underline underline-offset-4 transition-colors"
+            >
               เข้าสู่ระบบ
             </Link>
           </p>

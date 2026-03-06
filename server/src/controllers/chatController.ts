@@ -1,4 +1,6 @@
+import { app } from "..";
 import sql from "../../db";
+import { notificationService } from "../services/notificationService";
 import { strictBody } from "../utils/validate";
 
 // POST /chat/room  (สร้างหรือคืนห้องเดิม)
@@ -275,10 +277,47 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
       // insert message
       const msgRows = await tx`
         INSERT INTO "message"(chat_id, sender_id, text, created_at)
-        VALUES (${chat_id}, ${user.student_id}, ${text}, NOW())
+        VALUES (${chat_id}, ${user.student_id}, ${text}, CURRENT_TIMESTAMP)
         RETURNING message_id, chat_id, sender_id, text, created_at
       `;
+
+      const otherId =
+        user.student_id === room[0].buyer_id
+          ? room[0].seller_id
+          : room[0].buyer_id;
+
+      app.server?.publish(
+        `user-${otherId}`,
+        JSON.stringify({ type: "NEW_CHAT", chat_id }),
+      );
+
       const msg = msgRows[0];
+      const receiverId =
+        room[0].buyer_id === user.student_id
+          ? room[0].seller_id
+          : room[0].buyer_id;
+
+      // 🚩 1. ส่งสัญญาณบอก Navbar ของผู้รับให้เด้งเลขที่ไอคอนแชท
+      app.server?.publish(
+        `user-${receiverId}`,
+        JSON.stringify({
+          type: "NEW_CHAT_MESSAGE",
+          data: {
+            chat_id,
+            sender_name: user.first_name,
+            text: text.substring(0, 30), // ส่ง preview สั้นๆ ไปด้วยเผื่อทำ toast
+          },
+        }),
+      );
+
+      // ส่งเข้าห้องแชท (เผื่อเขากำลังเปิดหน้าแชทคุยกันอยู่)
+      app.server?.publish(
+        `room-${chat_id}`,
+        JSON.stringify({
+          type: "ROOM_MESSAGE",
+          data: msgRows[0], // ข้อมูล message_id, text, created_at ฯลฯ
+        }),
+      );
 
       // update last_message_at
       await tx`
@@ -286,6 +325,13 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
         SET last_message_at = ${msg.created_at}
         WHERE chat_id = ${chat_id}
       `;
+      // await notificationService.createNotification(
+      //   tx,
+      //   receiverId,
+      //   "CHAT_MESSAGE", // Type ใหม่สำหรับข้อความ
+      //   `คุณได้รับข้อความใหม่จาก ${user.first_name}`,
+      //   String(chat_id),
+      // );
 
       return msg;
     });

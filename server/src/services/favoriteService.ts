@@ -1,22 +1,69 @@
 import sql from "../../db";
+import { notificationService } from "./notificationService";
 
+// FavoriteService.ts
 export class FavoriteService {
+  private server: any;
+
+  setServer(server: any) {
+    this.server = server;
+  }
+
   async addFavorite(userId: number, postId: number) {
     return await sql.begin(async (tx: any) => {
-      // Check if duplicate favorite exists
-      const existing = await tx`
-        SELECT favorite_id FROM "favorite"
-        WHERE user_id = ${userId} AND post_id = ${postId}
-        LIMIT 1
-      `;
+      // 1. เช็คซ้ำ
+      const existing =
+        await tx`SELECT favorite_id FROM "favorite" WHERE user_id = ${userId} AND post_id = ${postId} LIMIT 1`;
       if (existing.length > 0) throw new Error("Post already in favorites");
 
-      // Create favorite
+      // 2. หาเจ้าของโพสต์
+      const posts =
+        await tx`SELECT student_id, title FROM "Post" WHERE post_id = ${postId} LIMIT 1`;
+      if (posts.length === 0) throw new Error("Post not found");
+      const post = posts[0];
+
+      // 3. บันทึก Favorite
       const favorite = await tx`
         INSERT INTO "favorite" (user_id, post_id, created_at)
-        VALUES (${userId}, ${postId}, NOW())
-        RETURNING *
+        VALUES (${userId}, ${postId}, NOW()) RETURNING *
       `;
+
+      // 🚩 จังหวะส่งสัญญาณ Real-time แจ้งกระดิ่ง
+      if (post.student_id !== userId) {
+        const noti = await notificationService.createNotification(
+          tx,
+          post.student_id,
+          "NEW_FAVORITE",
+          `มีคนถูกใจโพสต์ของคุณ: ${post.title}`,
+          String(postId),
+        );
+
+        if (this.server?.server) {
+          this.server.server.publish(
+            `user-${post.student_id}`,
+            JSON.stringify({
+              type: "NEW_NOTIFICATION",
+              data: noti,
+            }),
+          );
+          console.log(`✅ Published to user-${post.student_id}`); // ลองใส่ Log เช็คที่ Terminal
+        } else {
+          console.log("❌ Server instance not found in Service");
+        }
+
+        // ตรวจสอบว่า server พร้อมใช้งานไหม (ใช้ app.server สำหรับ Elysia)
+        const wsServer = this.server?.server || this.server;
+
+        if (wsServer) {
+          wsServer.publish(
+            `user-${post.student_id}`,
+            JSON.stringify({
+              type: "NEW_NOTIFICATION",
+              data: noti,
+            }),
+          );
+        }
+      }
       return favorite[0];
     });
   }
@@ -49,14 +96,15 @@ export class FavoriteService {
     `;
     return found.length > 0;
   }
+
   async getFavoriteCount(postId: number) {
-  const rows = await sql`
-    SELECT COUNT(*)::int AS count
-    FROM "favorite"
-    WHERE post_id = ${postId}
-  `;
-  return rows[0]?.count ?? 0;
-}
+    const rows = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM "favorite"
+      WHERE post_id = ${postId}
+    `;
+    return rows[0]?.count ?? 0;
+  }
 }
 
 export const favoriteService = new FavoriteService();
