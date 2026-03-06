@@ -42,7 +42,7 @@ const AdminReport = () => {
 
   useEffect(() => {
     fetchReport();
-  }, []);
+  }, [reports]);
 
   const handleDeletePost = async (reportId: number) => {
     const result = await Swal.fire({
