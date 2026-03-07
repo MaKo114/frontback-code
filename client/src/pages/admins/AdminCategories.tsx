@@ -169,6 +169,48 @@ const AdminCategories = () => {
         {/* Right: Category List */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
+            { /* Navigation Footer */ }
+            {categories.length > itemsPerPage && (
+              <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
+                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Page {currentPage} of {totalPages}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-[#FF5800] hover:border-[#FF5800] disabled:opacity-30 transition-all"
+                  >
+                    <ChevronLeft size={16}/>
+                  </button>
+
+                  { /* ปุ่มแสดงหน้า */ }
+                  <div className="flex gap-1 px-1">
+                    {Array.from({ length: totalPages }, (_,i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={` w-7 h-7 rounded-lg text-xs font-black transition-all ${
+                          currentPage === page
+                          ? "bg-[#FF5800] text-white"
+                          :"text-gray-400 hover:bg-white hover:text-gray-600"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-[#FF5800] hover:border-[#FF5800] disabled:opacity-30 transition-all"
+                  >
+                    <ChevronRight size={16}/>
+                  </button>
+                </div>
+            </div>
+          )}
             <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Tag size={18} className="text-gray-400" />
@@ -249,51 +291,10 @@ const AdminCategories = () => {
               </div>
             )}
           </div>
+          
+
         </div>
 
-        { /* Navigation Footer */ }
-        {categories.length > itemsPerPage && (
-          <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                Page {currentPage} of {totalPages}
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-[#FF5800] hover:border-[#FF5800] disabled:opacity-30 transition-all"
-              >
-                <ChevronLeft size={16}/>
-              </button>
-
-              { /* ปุ่มแสดงหน้า */ }
-              <div className="flex gap-1 px-1">
-                {Array.from({ length: totalPages }, (_,i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={` w-7 h-7 rounded-lg text-xs font-black transition-all ${
-                      currentPage === page
-                      ? "bg-[#FF5800] text-white"
-                      :"text-gray-400 hover:bg-white hover:text-gray-600"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-[#FF5800] hover:border-[#FF5800] disabled:opacity-30 transition-all"
-              >
-                <ChevronRight size={16}/>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
