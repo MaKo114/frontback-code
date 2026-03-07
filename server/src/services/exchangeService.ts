@@ -265,6 +265,49 @@ export class ExchangeService {
     ORDER BY e.created_at DESC
   `;
   }
+  async cancelRequest(exchangeId: number, requesterId: number) {
+  return await sql.begin(async (tx: any) => {
+    const found = (
+      await tx`
+        SELECT e.*, p.title
+        FROM "exchange" e
+        JOIN "Post" p ON e.post_id = p.post_id
+        WHERE e.exchange_id = ${exchangeId}
+          AND e.requester_id = ${requesterId}
+        LIMIT 1
+      `
+    )[0];
+
+    if (!found) {
+      throw new Error("Exchange request not found");
+    }
+
+    if (found.status !== "PENDING") {
+      throw new Error("You can only cancel a pending request");
+    }
+
+    const updated = (
+      await tx`
+        UPDATE "exchange"
+        SET status = 'CANCELED', updated_at = NOW()
+        WHERE exchange_id = ${exchangeId}
+        RETURNING *
+      `
+    )[0];
+
+    // แจ้ง owner
+    const noti = await notificationService.createNotification(
+      tx,
+      found.owner_id,
+      "EXCHANGE_CANCELED",
+      `ผู้ขอแลกได้ยกเลิกคำขอสำหรับโพสต์: ${found.title}`,
+      String(exchangeId)
+    );
+    this.publishNoti(found.owner_id, noti);
+
+    return updated;
+  });
+}
 }
 
 export const exchangeService = new ExchangeService();

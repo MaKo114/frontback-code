@@ -137,3 +137,26 @@ export const requesterConfirmExchange = async ({ params, user, set }: any) => {
     return { error: err.message };
   }
 };
+
+export const cancelExchangeRequest = async ({ params, user, set }: any) => {
+  try {
+    if (!user?.student_id) {
+      set.status = 401;
+      return { error: "Please login first" };
+    }
+
+    const exchange_id = Number(params.exchange_id);
+    if (!exchange_id || Number.isNaN(exchange_id)) {
+      set.status = 400;
+      return { error: "Invalid exchange_id" };
+    }
+
+    const result = await exchangeService.cancelRequest(exchange_id, user.student_id);
+
+    set.status = 200;
+    return { message: "Exchange request canceled successfully", data: result };
+  } catch (err: any) {
+    set.status = 400;
+    return { error: err.message };
+  }
+};
