@@ -6,10 +6,12 @@ import {
   Zap,
   ShieldCheck,
 } from "lucide-react";
+import Title from "@/titles/Title";
 
 const LandingPage = () => {
   return (
-    <div className="bg-white font-['Inter',_sans-serif] text-gray-900">
+    <div className="bg-white font-['Inter', sans-serif] text-gray-900">
+      <Title/>
       {/* --- Hero Section --- */}
       <section className="relative overflow-hidden pt-12 pb-16 lg:pt-20 lg:pb-24">
         {/* Background Deco */}
@@ -27,7 +29,7 @@ const LandingPage = () => {
           {/* ปรับขนาดจาก 7xl -> 6xl และบีบ max-w */}
           <h1 className="mx-auto max-w-3xl text-4xl font-black tracking-tight sm:text-6xl leading-[1.1]">
             ส่งต่อความช่วยเหลือ <br />
-            <span className="bg-gradient-to-r from-[#FFB800] to-[#FF5800] bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-[#FFB800] to-[#FF5800] bg-clip-text text-transparent">
               ฉบับเด็กสจล.
             </span>
           </h1>
@@ -58,7 +60,7 @@ const LandingPage = () => {
               <span className="text-xl font-black text-gray-900">1k+</span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Students</span>
             </div>
-            <div className="h-6 w-[1px] bg-gray-200" />
+            <div className="h-6 w-px bg-gray-200" />
             <div className="flex flex-col items-center">
               <span className="text-xl font-black text-gray-900">500+</span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Daily Posts</span>
@@ -119,7 +121,7 @@ const LandingPage = () => {
       {/* --- Call to Action (Version Super Compact) --- */}
       <section className="py-14">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#FFB800] to-[#FF5800] px-6 py-10 text-center text-white shadow-xl shadow-orange-100">
+          <div className="relative overflow-hidden rounded-[28px] bg-linear-to-br from-[#FFB800] to-[#FF5800] px-6 py-10 text-center text-white shadow-xl shadow-orange-100">
             <div className="relative z-10">
               <h2 className="text-xl font-black sm:text-3xl mb-3 tracking-tight">
                 พร้อมแลกเปลี่ยนหรือยัง?
