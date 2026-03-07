@@ -60,7 +60,7 @@ const LoadingToRedirect = () => {
 
       {/* Footer Branding */}
       <p className="mt-8 text-gray-300 text-[10px] font-bold uppercase tracking-widest">
-        Security System • KMITL CONNECT
+        Security System • TokLadkrabang
       </p>
     </div>
   );

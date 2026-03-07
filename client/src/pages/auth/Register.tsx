@@ -95,7 +95,7 @@ const Register = () => {
       Swal.fire({
         icon: "success",
         title: "ลงทะเบียนสำเร็จ!",
-        text: "ยินดีต้อนรับเข้าสู่ KMITL CONNECT",
+        text: "ยินดีต้อนรับเข้าสู่ TokLadkrabang",
         confirmButtonColor: "#FF5800",
         confirmButtonText: "ไปหน้าเข้าสู่ระบบ",
       }).then((result) => {
@@ -131,7 +131,7 @@ const Register = () => {
             สร้างบัญชีใหม่
           </h1>
           <p className="text-gray-400 text-sm font-medium">
-            เข้าร่วมคอมมูนิตี้ KMITL CONNECT ได้ง่ายๆ ในไม่กี่ขั้นตอน
+            เข้าร่วมคอมมูนิตี้ TokLadkrabang ได้ง่ายๆ ในไม่กี่ขั้นตอน
           </p>
         </div>
 
@@ -268,7 +268,7 @@ const Register = () => {
       </div>
 
       <p className="mt-8 text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em]">
-        KMITL CONNECT • Community for Students
+        TokLadkrabang • Community for Students
       </p>
     </div>
   );

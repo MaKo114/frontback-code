@@ -195,7 +195,7 @@ const Login = () => {
       </div>
 
       <p className="mt-8 text-gray-400 text-xs font-medium uppercase tracking-widest">
-        KMITL CONNECT • Engineering Your Connections
+        TokLadkrabang • Engineering Your Connections
       </p>
     </div>
   );

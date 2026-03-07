@@ -17,7 +17,7 @@ const SideBar = () => {
           </div>
         </div>
         <div className="px-6 text-[11px] text-gray-400 font-medium">
-          © 2026 KMITL CONNECT • Community for Students
+          © 2026 TokLadkrabang • Community for Students
         </div>
       </div>
     </aside>

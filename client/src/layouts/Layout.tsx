@@ -17,7 +17,7 @@ const Layout = () => {
       <footer className="py-10 text-center">
         <div className="mb-2 h-[1px] w-20 bg-gray-200 mx-auto" />
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-          © 2026 KMITL CONNECT • Engineering Your Connections
+          © 2026 TokLadkrabang • Engineering Your Connections
         </p>
       </footer>
     </div>
