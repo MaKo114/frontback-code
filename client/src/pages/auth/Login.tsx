@@ -39,9 +39,9 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // const isKmitl = validateKmitlEmail(form.email);
-    // const isAdmin = form.email === "admin@gmail.com";
-    // console.log(isAdmin, form.email);
+    const isKmitl = validateKmitlEmail(form.email);
+    const isAdmin = form.email === "admin@gmail.com";
+    console.log(isAdmin, form.email);
     
 
     // 3. ตรวจสอบ Format อีเมลก่อนยิง API

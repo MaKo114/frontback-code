@@ -51,9 +51,9 @@ export const deleteImage = (token: string, public_id: string) => {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    data: { public_id }
+    data: { public_id },
   });
-}
+};
 
 export const getMyPost = async (token: string) => {
   try {
@@ -62,7 +62,7 @@ export const getMyPost = async (token: string) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return res
+    return res;
   } catch (err) {
     console.log(err);
   }
@@ -87,6 +87,12 @@ export const getMyProfileApi = (token: string) => {
 
 export const getPostByIdApi = (token: string, post_id: number) => {
   return axios.get(`${API}/posts/${post_id}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+};
+
+export const editPostAPI = (token: string, post_id: number, data: any) => {
+  return axios.put(`${API}/post/${post_id}`, data, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 };

@@ -18,4 +18,21 @@ export const inputCommentAPI = async (token: string, post_id: number, text: stri
         }
     })
 }
+export const editCommentAPI = async (token: string, comment_id: number, text: string) => {
+    return await axios.put(`${API}/comments/${comment_id}`,
+        { text }, 
+        {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+}
+export const deleteCommentAPI = async (token: string, comment_id: number) => {
+    return await axios.delete(`${API}/comments/${comment_id}`,
+        {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+}
 

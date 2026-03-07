@@ -93,7 +93,8 @@ export const getCommentsByPost = async ({ params, set }: any) => {
         c.text,
         c.created_at,
         u.first_name,
-        u.last_name
+        u.last_name,
+        u.profile_img
       FROM "comment" c
       JOIN "User" u ON u.student_id = c.user_id
       WHERE c.post_id = ${post_id}

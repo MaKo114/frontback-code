@@ -15,6 +15,7 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
+
   useEffect(() => {
     fetchPosts();
     getUserInformation();
@@ -56,7 +57,7 @@ const HomePage = () => {
           </div>
 
           {/* Posts List */}
-          <div className="space-y-6">
+          <div className="space-y-6" >
             {filteredPosts.length > 0 ? (
               filteredPosts.map((post: any) =>
                 post.status === "CLOSED" ? null : (

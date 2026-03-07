@@ -20,7 +20,7 @@ export const createPost = async ({ body, user, set }: any) => {
 
     const category_id = Number(body.category_id);
     const { title, description, image_data } = body;
-    console.log("BODY:", body);
+
 
     // ✅ 2. ปรับการ Check: ตรวจสอบว่าเป็น Array ของ Object หรือไม่
     if (!Array.isArray(image_data) || image_data.length === 0) {

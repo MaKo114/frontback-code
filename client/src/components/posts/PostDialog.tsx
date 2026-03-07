@@ -9,34 +9,72 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X, Loader2, Tag, ShoppingBag, Pencil } from "lucide-react";
-import { useState } from "react";
-import { createPost, uploadFile, deleteImage } from "@/api/post"; // เพิ่ม deleteImage
+import { useState, useEffect } from "react";
+import { createPost, uploadFile, deleteImage, editPostAPI } from "@/api/post";
 import useTestStore from "@/store/tokStore";
+import usePostStore from "@/store/postStore";
 import Swal from "sweetalert2";
 
 interface PostDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: "create" | "edit";
+  initialData?: {
+    post_id: number;
+    title: string;
+    description: string;
+    category_id: number | null;
+    images?: { image_url: string; public_id?: string }[];
+  };
 }
 
-const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
+const PostDialog = ({
+  open,
+  onOpenChange,
+  mode = "create",
+  initialData,
+}: PostDialogProps) => {
+  const isEdit = mode === "edit";
+
   const [postForm, setPostForm] = useState({
     category_id: null as number | null,
     title: "",
     description: "",
-    // ✅ เปลี่ยนชื่อให้ตรงกับที่ Backend รอรับ
     image_data: [] as { url: string; public_id: string }[],
   });
 
   const [loading, setLoading] = useState(false);
   const categories = useTestStore((state) => state.categories);
   const token = useTestStore((state) => state.token);
+  const fetchMyPosts = usePostStore((state) => state.fetchMyPosts);
+
+  // โหลด initialData เมื่อเปิด edit mode
+  useEffect(() => {
+    if (open && isEdit && initialData) {
+      setPostForm({
+        category_id: initialData.category_id,
+        title: initialData.title,
+        description: initialData.description,
+        image_data: (initialData.images || []).map((img) => ({
+          url: img.image_url,
+          public_id: img.public_id || "",
+        })),
+      });
+    }
+    if (!open) {
+      // reset เมื่อปิด
+      setPostForm({
+        category_id: null,
+        title: "",
+        description: "",
+        image_data: [],
+      });
+    }
+  }, [open, isEdit, initialData]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !token) return;
-
     const files = Array.from(e.target.files);
-
     try {
       setLoading(true);
       const uploadedResults = await Promise.all(
@@ -48,11 +86,7 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
               reader.onloadend = async () => {
                 try {
                   const res = await uploadFile(token, reader.result as string);
-
-                  resolve({
-                    url: res.data.url,
-                    public_id: res.data.public_id, // ตรวจสอบชื่อ key จาก backend (public หรือ public_id)
-                  });
+                  resolve({ url: res.data.url, public_id: res.data.public_id });
                 } catch (err) {
                   reject(err);
                 }
@@ -62,13 +96,11 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
           );
         }),
       );
-
-      // ✅ Update เข้า image_data
       setPostForm((prev) => ({
         ...prev,
         image_data: [...prev.image_data, ...uploadedResults],
       }));
-    } catch (err) {
+    } catch {
       Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถอัปโหลดรูปภาพได้", "error");
     } finally {
       setLoading(false);
@@ -76,16 +108,15 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
   };
 
   const handleRemoveImage = async (index: number, public_id: string) => {
-    try {
-      // ลบจาก UI ทันที
-      const newImages = [...postForm.image_data];
-      newImages.splice(index, 1);
-      setPostForm({ ...postForm, image_data: newImages });
-
-      // สั่งลบใน Cloudinary (Optional: เพื่อไม่ให้ไฟล์ขยะค้าง)
-      await deleteImage(token!, public_id);
-    } catch (err) {
-      console.error("Remove image error:", err);
+    const newImages = [...postForm.image_data];
+    newImages.splice(index, 1);
+    setPostForm({ ...postForm, image_data: newImages });
+    if (public_id) {
+      try {
+        await deleteImage(token!, public_id);
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -94,30 +125,27 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
       Swal.fire("ข้อมูลไม่ครบ", "กรุณาระบุชื่อสิ่งของและหมวดหมู่", "warning");
       return;
     }
-
     try {
       setLoading(true);
-      // ✅ ส่ง postForm ที่มี image_data ไปหา Backend
-      await createPost(token!, postForm);
-
+      if (isEdit && initialData) {
+        await editPostAPI(token!, initialData.post_id, postForm);
+      } else {
+        await createPost(token!, postForm);
+      }
       Swal.fire({
         icon: "success",
-        title: "โพสต์สำเร็จ!",
+        title: isEdit ? "แก้ไขสำเร็จ!" : "โพสต์สำเร็จ!",
         timer: 1500,
         showConfirmButton: false,
       });
-
-      // Reset Form
-      setPostForm({
-        category_id: null,
-        title: "",
-        description: "",
-        image_data: [],
-      });
+      fetchMyPosts();
       onOpenChange(false);
-    } catch (err) {
-      console.error(err);
-      Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถสร้างโพสต์ได้", "error");
+    } catch {
+      Swal.fire(
+        "เกิดข้อผิดพลาด",
+        isEdit ? "ไม่สามารถแก้ไขโพสต์ได้" : "ไม่สามารถสร้างโพสต์ได้",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -132,10 +160,12 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
               <Pencil className="text-[#FF5800]" size={24} />
-              เขียนโพสต์ของคุณ
+              {isEdit ? "แก้ไขโพสต์" : "เขียนโพสต์ของคุณ"}
             </DialogTitle>
             <DialogDescription className="text-gray-500">
-              ระบุรายละเอียดสิ่งของที่ต้องการนำมาแลกเปลี่ยนให้ชัดเจน
+              {isEdit
+                ? "แก้ไขรายละเอียดสิ่งของที่ต้องการนำมาแลกเปลี่ยน"
+                : "ระบุรายละเอียดสิ่งของที่ต้องการนำมาแลกเปลี่ยนให้ชัดเจน"}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -192,7 +222,7 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
               }
             />
 
-            {/* Upload Area */}
+            {/* Upload */}
             <div className="space-y-4">
               <label className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[24px] border-2 border-dashed border-gray-200 bg-gray-50/50 py-10 transition-all hover:border-[#FF5800] hover:bg-orange-50/30 group">
                 <div className="p-4 bg-white rounded-2xl shadow-sm text-gray-400 group-hover:text-[#FF5800]">
@@ -215,13 +245,12 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
                 />
               </label>
 
-              {/* Preview Grid */}
               {postForm.image_data.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 pt-2">
                   {postForm.image_data.map((img, index) => (
                     <div
                       key={index}
-                      className="relative group/img aspect-square animate-in fade-in zoom-in-95"
+                      className="relative group/img aspect-square"
                     >
                       <button
                         type="button"
@@ -259,6 +288,8 @@ const PostDialog = ({ open, onOpenChange }: PostDialogProps) => {
             >
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : isEdit ? (
+                "บันทึกการแก้ไข"
               ) : (
                 "ลงประกาศเลย"
               )}
