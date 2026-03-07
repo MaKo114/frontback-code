@@ -5,7 +5,7 @@ const API_URL = "http://localhost:8000"; // ปรับตามจริง
 export const addFavoriteApi = (token: string, postId: number) =>
   axios.post(
     `${API_URL}/favorites`,
-    { post_id: postId }, // 👈 ส่งเป็น Object ไปใน Body
+    { post_id: postId }, 
     { headers: { Authorization: `Bearer ${token}` } },
   );
 
@@ -20,5 +20,5 @@ export const checkIsFavoriteApi = (token: string, postId: number) =>
   });
 
 export const getFavCountApi = async (post_id: number) => {
-  return axios.get(`http://localhost:8000/posts/${post_id}/favorites/count`);
+  return axios.get(`${API_URL}/posts/${post_id}/favorites/count`);
 };

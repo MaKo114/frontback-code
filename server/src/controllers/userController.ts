@@ -42,6 +42,9 @@ export const getUserById = async ({ params, set }: any) => {
         email, 
         role, 
         status, 
+        phone_number,
+        profile_img,
+        cover_img,
         created_at, 
         updated_at
       FROM "User"
@@ -171,5 +174,94 @@ export const deleteUserById = async ({ params, set }: any) => {
   } catch (err) {
     set.status = 500;
     return err;
+  }
+};
+
+// ดึงข้อมูลตัวเอง (me)
+// ดึงข้อมูลตัวเอง (me) - ใช้ Raw SQL
+export const getMe = async ({ user, set }: any) => {
+  try {
+    // user.student_id ได้มาจาก Middleware (ถอดจาก Token)
+    const student_id = user?.student_id;
+
+    if (!student_id) {
+      set.status = 401;
+      return { message: "Unauthorized" };
+    }
+
+    const currentUser = await sql`
+      SELECT 
+        student_id, 
+        first_name, 
+        last_name, 
+        email, 
+        phone_number, 
+        profile_img, 
+        profile_public_id, 
+        cover_img,
+        cover_public_id
+      FROM "User"
+      WHERE student_id = ${student_id}
+      LIMIT 1
+    `;
+
+    if (currentUser.length === 0) {
+      set.status = 404;
+      return { message: "ไม่พบผู้ใช้งาน" };
+    }
+
+    set.status = 200;
+    return currentUser[0];
+  } catch (err) {
+    set.status = 500;
+    return { message: "Server Error", error: err };
+  }
+};
+
+// อัปเดตโปรไฟล์ - ใช้ Raw SQL
+export const updateProfile = async ({ body, user, set }: any) => {
+  try {
+    const student_id = user?.student_id;
+    if (!student_id) {
+      set.status = 401;
+      return { message: "Unauthorized" };
+    }
+
+    const {
+      first_name,
+      last_name,
+      phone_number,
+      profile_img,
+      cover_img,
+      profile_public_id,
+      cover_public_id,
+    } = body;
+
+    const updated = await sql`
+      UPDATE "User"
+      SET
+        first_name = COALESCE(${first_name}, first_name),
+        last_name  = COALESCE(${last_name}, last_name),
+        phone_number = COALESCE(${phone_number}, phone_number),
+        profile_img  = COALESCE(${profile_img}, profile_img),
+        cover_img    = COALESCE(${cover_img}, cover_img),
+        profile_public_id = COALESCE(${profile_public_id}, profile_public_id),
+        cover_public_id   = COALESCE(${cover_public_id}, cover_public_id),
+        updated_at = now()
+      WHERE student_id = ${student_id}
+      RETURNING student_id, first_name, last_name, updated_at
+    `;
+
+    if (updated.length === 0) {
+      set.status = 404;
+      return { message: "ไม่พบผู้ใช้งานเพื่ออัปเดต" };
+    }
+
+    set.status = 200;
+    return { message: "อัปเดตโปรไฟล์สำเร็จ", user: updated[0] };
+  } catch (err) {
+    console.error(err);
+    set.status = 500;
+    return { message: "ไม่สามารถอัปเดตได้", error: err };
   }
 };

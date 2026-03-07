@@ -1,33 +1,33 @@
 import axios from "axios";
 
-
 export const getInformation = async (token: string, student_id: number) => {
-  try{
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/${Number(student_id)}`, {
-        headers:{
-            Authorization: `Bearer ${token}`
-        }
-    })
-    return res
-  }catch(err){
+  try {
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/user/${Number(student_id)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return res;
+  } catch (err) {
     console.log(err);
   }
-}
+};
 
-export const getAllUser = async(token: string) => {
-    try{
+export const getAllUser = async (token: string) => {
+  try {
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
-        headers:{
-            Authorization: `Bearer ${token}`
-        }
-    })
-    return res
-    
-    }catch(err){
-        console.log(err);
-    }
-}
-
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const blockUser = (token: string, student_id: number) => {
   return axios.put(
@@ -37,7 +37,7 @@ export const blockUser = (token: string, student_id: number) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 };
 
@@ -49,6 +49,15 @@ export const unblockUser = (token: string, student_id: number) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 };
+
+
+export const getMe = async (token: string) => {
+  return await axios.get(`${import.meta.env.VITE_API_URL}/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}

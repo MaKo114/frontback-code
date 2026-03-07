@@ -6,6 +6,7 @@ import useTestStore from "@/store/tokStore";
 import { getChatMessages, sendMessageApi } from "@/api/chat";
 import { requestExchangeApi } from "@/api/exchage";
 import Swal from "sweetalert2";
+import { markChatAsReadApi } from "@/api/notification";
 
 const ChatPage = () => {
   const { chatId } = useParams();
@@ -54,8 +55,18 @@ const ChatPage = () => {
 
     socket.onmessage = (event) => {
       try {
-        const incomingData = JSON.parse(event.data);
+        const response = JSON.parse(event.data);
+
+        // 🚩 ตรวจสอบก่อนว่าข้อมูลที่ส่งมาเป็นรูปแบบ ROOM_MESSAGE หรือไม่
+        // ถ้า Backend ส่งมาแบบมี type ให้ดึงจาก response.data
+        const incomingData =
+          response.type === "ROOM_MESSAGE" ? response.data : response;
+
+        // ตรวจสอบความถูกต้องของข้อมูลเบื้องต้น
+        if (!incomingData || !incomingData.text) return;
+
         setMessages((prev) => {
+          // เช็คซ้ำด้วย message_id
           const isDuplicate = prev.some(
             (m) => m.message_id === incomingData.message_id,
           );
@@ -87,6 +98,24 @@ const ChatPage = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // ใน ChatPage.tsx
+  // ChatPage.tsx
+  useEffect(() => {
+    const markAsRead = async () => {
+      // 🚩 เปลี่ยนจาก chat_id เป็น chatId (ตามชื่อที่ดึงจาก useParams)
+      if (chatId && token) {
+        try {
+          await markChatAsReadApi(token, chatId);
+          // ตะโกนบอก Navbar ในเครื่องตัวเองให้ Fetch ข้อมูลใหม่
+          window.dispatchEvent(new Event("refreshNotifications"));
+        } catch (err) {
+          console.error("Mark as read failed:", err);
+        }
+      }
+    };
+    markAsRead();
+  }, [chatId, token]); // เพิ่ม token ใน dependency เพื่อความชัวร์
 
   const handleSend = async () => {
     if (!message.trim() || !chatId || !token) return;
@@ -137,6 +166,7 @@ const ChatPage = () => {
         title: "ส่งคำขอแลกเปลี่ยนแล้ว! รอเจ้าของโพสต์ตอบรับ",
       });
     } catch (err: any) {
+      console.error("exchange error:", err?.response?.data); // ← เพิ่มบรรทัดนี้
       Swal.fire({
         toast: true,
         position: "bottom",
@@ -145,8 +175,6 @@ const ChatPage = () => {
         icon: "error",
         title: err?.response?.data?.error || "เกิดข้อผิดพลาด",
       });
-    } finally {
-      setExchangeLoading(false);
     }
   };
 

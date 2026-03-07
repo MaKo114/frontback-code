@@ -8,6 +8,7 @@
   "dependencies": {
     "@elysiajs/cors": "1.1.1",
     "@elysiajs/jwt": "1.1.0",
+    "@prisma/client": "^6.19.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.5.0",
     "elysia": "1.1.25",

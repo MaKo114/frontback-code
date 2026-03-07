@@ -15,10 +15,17 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
+
   useEffect(() => {
     fetchPosts();
     getUserInformation();
-  }, [posts]);
+    // poll ทุก 10 วินาที
+    const interval = setInterval(() => {
+      fetchPosts();
+    }, 10000);
+
+    return () => clearInterval(interval); // cleanup
+  }, []);
 
   const filteredPosts = posts.filter(
     (post: any) =>
@@ -50,7 +57,7 @@ const HomePage = () => {
           </div>
 
           {/* Posts List */}
-          <div className="space-y-6">
+          <div className="space-y-6" >
             {filteredPosts.length > 0 ? (
               filteredPosts.map((post: any) =>
                 post.status === "CLOSED" ? null : (

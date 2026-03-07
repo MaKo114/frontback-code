@@ -2,13 +2,15 @@ import Elysia from "elysia";
 import {
   createUser,
   deleteUserById,
+  getMe,
   getUserById,
   getUsers,
   updataUserById,
+  updateProfile,
 } from "../controllers/userController";
 import { login, register, requireAdmin, requireUser } from "../controllers/authController";
 import { authCheck, adminCheck } from "../middleware/auth";
-import { createPost, getMyPosts, editPost, deletePost,changePostStatus, getPostByCategory, getAllPost, createImage, deleteImage } from "../controllers/PostController";
+import { createPost, getMyPosts, editPost, deletePost,changePostStatus, getPostByCategory, getAllPost, createImage, deleteImage, getPostById } from "../controllers/PostController";
 import { getCategories, createCategory, deleteCategory, updateCategory } from "../controllers/categoryController";
 import {
   blockUser,
@@ -23,7 +25,7 @@ import {
 } from "../controllers/adminController";
 import {search} from "../controllers/searchController";
 import { createReport } from "../controllers/reportController";
-import { getNotifications, markAllAsRead, markAsRead } from "../controllers/notificationController";
+import { deleteNotification, getNotifications, getUnreadCount, markAllAsRead, markAsRead, markChatAsRead } from "../controllers/notificationController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
 import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite,getPostFavoriteCount } from "../controllers/favoriteController";
 import {
@@ -48,6 +50,7 @@ useRoutes.post("/chat/room", createOrGetChatRoom, { beforeHandle: authCheck });
 useRoutes.get("/chat/rooms", getMyChatRooms, { beforeHandle: authCheck });
 useRoutes.get("/chat/rooms/:chat_id/messages", getMessagesByRoom, { beforeHandle: authCheck });
 useRoutes.post("/chat/rooms/:chat_id/messages", sendMessage, { beforeHandle: authCheck });
+useRoutes.get("/mark-chat/:chat_id", markChatAsRead, { beforeHandle: authCheck})
 
 // auth
 useRoutes.post("/register", register);
@@ -56,20 +59,20 @@ useRoutes.post("/require-user", requireUser, { beforeHandle: authCheck });
 useRoutes.post("/require-admin", requireAdmin, { beforeHandle: [authCheck, adminCheck] });
 
 // post
+useRoutes.get("/posts/:post_id", getPostById, { beforeHandle: authCheck});
 useRoutes.post("/create-post", createPost, { beforeHandle: authCheck });
 useRoutes.get("/getpost", getMyPosts, { beforeHandle: authCheck });
 useRoutes.get("/get-all-post", getAllPost)
+useRoutes.get("/post-by-category/:category_id", getPostByCategory)
+useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
+useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
+useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
 
 // search & upload
 useRoutes.post("/search", search);
 useRoutes.post("/upload-image", createImage)
 useRoutes.delete("/deleted-image", deleteImage)
 
-// post
-useRoutes.get("/post-by-category/:category_id", getPostByCategory)
-useRoutes.put("/post/:post_id", editPost, { beforeHandle: authCheck });
-useRoutes.delete("/post/:post_id", deletePost, { beforeHandle: authCheck });
-useRoutes.patch("/post/:post_id", changePostStatus, { beforeHandle: authCheck });
 
 // category
 useRoutes.get("/categories", getCategories);
@@ -80,6 +83,8 @@ useRoutes.delete("/categories/:category_id", deleteCategory, { beforeHandle: [au
 // user
 useRoutes.get("/users", getUsers, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.get("/user/:student_id", getUserById, { beforeHandle: authCheck });
+useRoutes.get("/me", getMe, { beforeHandle: authCheck }); 
+useRoutes.put("/update-profile", updateProfile, { beforeHandle: authCheck }); 
 useRoutes.post("/create", createUser, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.put("/update/:id", updataUserById, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.delete("/delete/:id", deleteUserById, { beforeHandle: [authCheck, adminCheck] });
@@ -91,6 +96,11 @@ useRoutes.post("/reports", createReport, { beforeHandle: authCheck });
 useRoutes.get("/notifications", getNotifications, { beforeHandle: authCheck });
 useRoutes.put("/notifications/:notification_id/read", markAsRead, { beforeHandle: authCheck });
 useRoutes.put("/notifications/read-all", markAllAsRead, { beforeHandle: authCheck });
+// ดึงจำนวนที่ยังไม่ได้อ่าน
+useRoutes.get("/notifications/unread-count", getUnreadCount, { beforeHandle: authCheck });
+
+// ลบแจ้งเตือนรายอัน
+useRoutes.delete("/notifications/:notification_id", deleteNotification, { beforeHandle: authCheck });
 
 // Admin routes
 useRoutes.get("/admin/users", getAllUsersAdmin, { beforeHandle: [authCheck, adminCheck] });

@@ -20,7 +20,7 @@ export const createPost = async ({ body, user, set }: any) => {
 
     const category_id = Number(body.category_id);
     const { title, description, image_data } = body;
-    console.log("BODY:", body);
+
 
     // ✅ 2. ปรับการ Check: ตรวจสอบว่าเป็น Array ของ Object หรือไม่
     if (!Array.isArray(image_data) || image_data.length === 0) {
@@ -516,6 +516,7 @@ export const getAllPost = async ({ set }: any) => {
         p.student_id,
         u.first_name,
         u.last_name,
+        u.profile_img,
         p.title,
         p.description,
         p.status,
@@ -546,9 +547,14 @@ export const getAllPost = async ({ set }: any) => {
 
       GROUP BY 
         p.post_id,
+        u.student_id,
         u.first_name,
         u.last_name,
-        c.category_id
+        u.profile_img,
+        c.category_id,
+        c.category_name,
+        p.created_at
+
 
       ORDER BY p.created_at DESC
     `;
@@ -615,5 +621,45 @@ export const deleteImage = async ({ body, set }: any) => {
     console.log(err);
     set.status = 500;
     return { message: "Internal Server Error" };
+  }
+};
+
+export const getPostById = async ({ params, set }: any) => {
+  try {
+    const post_id = Number(params.post_id);
+    if (!post_id) {
+      set.status = 400;
+      return { error: "invalid post_id" };
+    }
+
+    const rows = await sql`
+      SELECT 
+        p.*,
+        u.first_name, u.last_name, u.profile_img,
+        c.category_name,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object('image_id', pi.image_id, 'image_url', pi.image_url)
+          ) FILTER (WHERE pi.image_id IS NOT NULL),
+          '[]'
+        ) as images
+      FROM "Post" p
+      JOIN "User" u ON u.student_id = p.student_id
+      LEFT JOIN "post_category" pc ON pc.post_id = p.post_id
+      LEFT JOIN "Category" c ON c.category_id = pc.category_id
+      LEFT JOIN "post_image" pi ON pi.post_id = p.post_id
+      WHERE p.post_id = ${post_id}
+      GROUP BY p.post_id, u.first_name, u.last_name, u.profile_img, c.category_name
+      LIMIT 1
+    `;
+
+    if (rows.length === 0) {
+      set.status = 404;
+      return { error: "Post not found" };
+    }
+    return { data: rows[0] };
+  } catch (err: any) {
+    set.status = 500;
+    return { error: err.message };
   }
 };

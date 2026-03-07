@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import { Hash, Layers } from "lucide-react";
 
 const CategoriesMenu = () => {
-  const fetchPostByCategory = usePostStore(
-    (state) => state.fetchPostByCategory
-  );
+  const fetchPostByCategory = usePostStore((state) => state.fetchPostByCategory);
   const fetchPosts = usePostStore((state) => state.fetchPosts);
   const token = useTestStore((state) => state.token);
 
@@ -20,7 +18,7 @@ const CategoriesMenu = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-1.5 font-['Inter',_sans-serif]">
+    <div className="flex flex-col gap-1.5 font-['Inter',sans-serif]">
       {/* --- ปุ่มทั้งหมด --- */}
       <button
         onClick={() => {
@@ -29,7 +27,7 @@ const CategoriesMenu = () => {
         }}
         className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
           activeCategory === "ทั้งหมด"
-            ? "bg-gradient-to-r from-[#FFB800] to-[#FF5800] text-white shadow-md shadow-orange-100 translate-x-1"
+            ? "bg-linear-to-r from-[#FFB800] to-[#FF5800] text-white shadow-md shadow-orange-100 translate-x-1"
             : "text-gray-500 hover:bg-orange-50 hover:text-[#FF5800]"
         }`}
       >
@@ -54,7 +52,7 @@ const CategoriesMenu = () => {
             }}
             className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
               activeCategory === cat.category_name
-                ? "bg-gradient-to-r from-[#FFB800] to-[#FF5800] text-white shadow-md shadow-orange-100 translate-x-1"
+                ? "bg-linear-to-r from-[#FFB800] to-[#FF5800] text-white shadow-md shadow-orange-100 translate-x-1"
                 : "text-gray-500 hover:bg-orange-50 hover:text-[#FF5800]"
             }`}
           >

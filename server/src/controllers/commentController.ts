@@ -1,4 +1,6 @@
+import { app } from "..";
 import sql from "../../db";
+import { notificationService } from "../services/notificationService";
 import { strictBody } from "../utils/validate";
 
 // POST /posts/:post_id/comments
@@ -11,11 +13,6 @@ export const createComment = async ({ params, body, user, set }: any) => {
     }
 
     const post_id = Number(params.post_id);
-    if (!post_id || Number.isNaN(post_id)) {
-      set.status = 400;
-      return { error: "Invalid post_id" };
-    }
-
     const v = strictBody(body, ["text"], ["text"]);
     if (!v.ok) {
       set.status = 400;
@@ -23,28 +20,53 @@ export const createComment = async ({ params, body, user, set }: any) => {
     }
 
     const text = String(body.text).trim();
-    if (!text) {
-      set.status = 400;
-      return { error: "text must be non-empty" };
-    }
 
-    // ensure post exists
-    const post = await sql`
-      SELECT post_id
-      FROM "Post"
-      WHERE post_id = ${post_id}
+    // 1. ดึงข้อมูลโพสต์เพื่อเช็คว่ามีจริง และดูว่าใครคือเจ้าของโพสต์
+    const postData = await sql`
+      SELECT student_id, title 
+      FROM "Post" 
+      WHERE post_id = ${post_id} 
       LIMIT 1
     `;
-    if (post.length === 0) {
+
+    if (postData.length === 0) {
       set.status = 404;
       return { error: "Post not found" };
     }
+    const targetPost = postData[0];
 
+    // 2. บันทึกคอมเมนต์ลง DB
+    // ใช้ sql.begin เพื่อให้ถ้า Noti พัง คอมเมนต์ก็จะไม่บันทึก (หรือจะแยกกันก็ได้ตามใจพี่)
     const created = await sql`
       INSERT INTO "comment"(post_id, user_id, text, created_at, updated_at)
       VALUES (${post_id}, ${user.student_id}, ${text}, NOW(), NOW())
       RETURNING comment_id, post_id, user_id, text, created_at, updated_at
     `;
+
+    // 🚩 3. แจ้งเตือนเจ้าของโพสต์ (Real-time Notification)
+    // เงื่อนไข: ต้องไม่ใช่ตัวเองคอมเมนต์โพสต์ตัวเอง
+    if (targetPost.student_id !== user.student_id) {
+      // สร้างข้อมูลแจ้งเตือนใน Database
+      const noti = await notificationService.createNotification(
+        sql, // ส่ง sql instance เข้าไป
+        targetPost.student_id,
+        "NEW_COMMENT", // ประเภทคอมเมนต์
+        `${user.first_name} ได้แสดงความคิดเห็นในโพสต์ "${targetPost.title}": ${text.substring(0, 20)}...`,
+        String(post_id),
+      );
+
+      // ยิง WebSocket ไปหาเจ้าของโพสต์ทันที
+      if (app.server) {
+        app.server.publish(
+          `user-${targetPost.student_id}`,
+          JSON.stringify({
+            type: "NEW_NOTIFICATION",
+            data: noti,
+          }),
+        );
+        console.log(`✅ Comment Noti sent to user-${targetPost.student_id}`);
+      }
+    }
 
     set.status = 201;
     return { message: "Comment created", data: created[0] };
@@ -70,10 +92,9 @@ export const getCommentsByPost = async ({ params, set }: any) => {
         c.user_id,
         c.text,
         c.created_at,
-        c.updated_at,
         u.first_name,
         u.last_name,
-        u.email
+        u.profile_img
       FROM "comment" c
       JOIN "User" u ON u.student_id = c.user_id
       WHERE c.post_id = ${post_id}
@@ -81,7 +102,11 @@ export const getCommentsByPost = async ({ params, set }: any) => {
     `;
 
     set.status = 200;
-    return { data: rows };
+    // ✅ ส่ง count กลับไปด้วย
+    return {
+      data: rows,
+      count: rows.length,
+    };
   } catch (err: any) {
     set.status = 500;
     return { error: err.message };

@@ -3,8 +3,15 @@ import { useRoutes } from "./routes/userRoute";
 import { cors } from "@elysiajs/cors";
 import jwt from "@elysiajs/jwt";
 import { authCheck } from "./middleware/auth";
+import { favoriteService } from "./services/favoriteService";
+import { reportService } from "./services/reportService";
+import { exchangeService } from "./services/exchangeService";
 
-const app = new Elysia();
+export const app = new Elysia();
+
+favoriteService.setServer(app);
+reportService.setServer(app);
+
 
 app.use(
   cors({
@@ -21,6 +28,8 @@ app.use(
     exp: "7d",
   }),
 );
+
+app.derive(authCheck);
 
 app.ws("/ws/chat/:chat_id", {
   // ดึง user จาก middleware/auth ได้เหมือน Route ปกติ
@@ -42,7 +51,18 @@ app.ws("/ws/chat/:chat_id", {
   },
 });
 
-app.derive(authCheck);
+app.ws("/ws/notifications/:student_id", {
+  async open(ws) {
+    const { student_id } = ws.data.params;
+    ws.subscribe(`user-${student_id}`);
+    // console.log(`🔔 User ${student_id} is watching notifications`);
+  },
+  close(ws) {
+    const { student_id } = ws.data.params;
+    ws.unsubscribe(`user-${student_id}`);
+  },
+});
+
 app.use(useRoutes);
 
 app.listen(8000);

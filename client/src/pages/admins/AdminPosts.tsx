@@ -1,20 +1,20 @@
-import useTestStore from "@/store/tokStore";
 import Title from "../../titles/Title";
 import { Edit, Trash2, Search, FileText, User, Calendar, Tag, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import usePostStore from "@/store/postStore";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const AdminPosts = () => {
   const fetchPosts = usePostStore((s) => s.fetchPosts);
   const deletePost = usePostStore((s) => s.deletePost);
   const posts = usePostStore((state) => state.posts);
-  const token = useTestStore((state) => state.token);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [posts]);
 
   const filteredPosts = posts.filter(
     (p) =>
@@ -67,7 +67,7 @@ const AdminPosts = () => {
 
 
   return (
-    <div className="space-y-6 font-['Inter',_sans-serif]">
+    <div className="space-y-6 font-['Inter', sans-serif]">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -188,6 +188,7 @@ const AdminPosts = () => {
                         <button 
                           className="p-2.5 bg-gray-50 text-gray-500 rounded-xl hover:bg-white hover:text-blue-600 hover:shadow-md transition-all"
                           title="Edit Post"
+                          onClick={()=> navigate(`post/${post.post_id}`)}
                         >
                           <Edit size={18} />
                         </button>
