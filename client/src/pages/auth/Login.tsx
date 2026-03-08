@@ -5,6 +5,7 @@ import useTestStore from "../../store/tokStore";
 import Title from "../../titles/Title";
 import { Mail, Lock, LogIn } from "lucide-react"; // เพิ่มไอคอนให้น่าใช้งาน
 import Swal from "sweetalert2";
+import loginIllustration from "../../assets/login-illustration.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ const Login = () => {
         {/* เปลี่ยน bg-orange-50/30 เป็น bg-white */}
         <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-white items-center justify-center p-12">
           <img
-            src="https://img.freepik.com/free-vector/hand-drawn-business-communication-concept_23-2149140766.jpg?t=st=1769230982~exp=1769234582~hmac=8822c530fa44c0b9fb9027bb83bca487939f2b61da0053bbe9a1b1949442875d"
+            src={loginIllustration}
             alt="Login illustration"
             className="max-h-[450px] object-contain"
           />

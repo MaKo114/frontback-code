@@ -20,6 +20,7 @@ import useTestStore from "@/store/tokStore";
 import NotificationDropdown from "./NotificationDropdown";
 import { useEffect, useState } from "react";
 import { getNotificationsAPI } from "@/api/notification";
+import logo from "@/assets/logo/logo_tokladkrabang.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -115,13 +116,15 @@ const Navbar = () => {
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => navigate("/user")}
       >
-        <div className="bg-white p-1.5 rounded-xl shadow-inner">
-          <div className="w-6 h-6 bg-[#FF5800] rounded-lg rotate-12 flex items-center justify-center">
-            <span className="text-white font-black text-xs -rotate-12">K</span>
-          </div>
+        <div className="bg-white p-1 rounded-xl shadow-inner">
+          <img
+            src={logo}
+            alt="TokLadkrabang logo"
+            className="w-8 h-8 rounded-lg object-contain"
+          />
         </div>
         <span className="text-xl font-black text-white tracking-tighter">
-          KMITL <span className="font-light opacity-80">CONNECT</span>
+          TokLadkrabang
         </span>
       </div>
 
