@@ -21,7 +21,6 @@ export const createPost = async ({ body, user, set }: any) => {
     const category_id = Number(body.category_id);
     const { title, description, image_data } = body;
 
-
     // ✅ 2. ปรับการ Check: ตรวจสอบว่าเป็น Array ของ Object หรือไม่
     if (!Array.isArray(image_data) || image_data.length === 0) {
       set.status = 400;
@@ -61,9 +60,9 @@ export const createPost = async ({ body, user, set }: any) => {
       // ✅ 3. ปรับการ Insert: บันทึกทั้ง image_url และ public_id
       for (const img of image_data) {
         await tx`
-          INSERT INTO "post_image"(post_id, image_url, public_id)
-          VALUES (${post.post_id}, ${img.url}, ${img.public_id})
-        `;
+  INSERT INTO "post_image"(post_id, image_url, public_id)
+  VALUES (${post.post_id}, ${img.url}, ${img.public_id || ""})
+`;
       }
 
       const imgs = await tx`
@@ -111,7 +110,8 @@ export const getMyPosts = async ({ user, set }: any) => {
       SELECT json_agg(
         jsonb_build_object(
           'image_id', pi.image_id,
-          'image_url', pi.image_url
+          'image_url', pi.image_url,
+          'public_id', pi.public_id
         )
       )
       FROM "post_image" pi
@@ -133,6 +133,8 @@ ORDER BY p.created_at DESC
   }
 };
 
+// แทนที่ function editPost ใน PostController.ts
+
 export const editPost = async ({ params, body, user, set }: any) => {
   try {
     if (!user || !user.student_id) {
@@ -146,111 +148,82 @@ export const editPost = async ({ params, body, user, set }: any) => {
       return { error: "invalid post_id" };
     }
 
-    // strict: ขาดไม่ได้ เกินไม่ได้
-    const allowed = [
-      "category_id",
-      "title",
-      "description",
-      "status",
-      "image_urls",
-    ];
-    const required = [
-      "category_id",
-      "title",
-      "description",
-      "status",
-      "image_urls",
-    ];
+    // ✅ เปลี่ยน image_urls → image_data, ตัด status ออก (ไม่ได้ส่งมา)
+    const allowed = ["category_id", "title", "description", "image_data"];
+    const required = ["category_id", "title", "image_data"];
     const v = strictBody(body, allowed, required);
     if (!v.ok) {
       set.status = 400;
       return { error: v.error };
     }
 
-    const { category_id, title, description, status, image_urls } = body;
+    const { category_id, title, description, image_data } = body;
 
-    if (!Array.isArray(image_urls) || image_urls.length === 0) {
+    // ✅ validate image_data เหมือน createPost
+    if (!Array.isArray(image_data) || image_data.length === 0) {
       set.status = 400;
-      return { error: "image_urls must be a non-empty array" };
+      return { error: "image_data must be a non-empty array" };
     }
-    if (image_urls.some((u) => typeof u !== "string" || u.trim() === "")) {
+    // แต่ละ item ต้องมี url (public_id อาจเป็น "" ถ้ารูปเก่าไม่มี public_id)
+    if (image_data.some((img: any) => !img.url)) {
       set.status = 400;
-      return { error: "image_urls must be array of non-empty strings" };
+      return { error: "Each image must have a url" };
     }
 
     // เช็ค category มีจริง
     const cat = await sql`
       SELECT category_id FROM "Category"
-      WHERE category_id = ${category_id}
-      LIMIT 1
+      WHERE category_id = ${category_id} LIMIT 1
     `;
     if (cat.length === 0) {
       set.status = 400;
       return { error: "category_id not found" };
     }
 
-    // ใช้ transaction กันหลุดครึ่งทาง
     const result = await sql.begin(async (tx: any) => {
-      // 1) เช็คว่าโพสต์มีจริง + เป็นเจ้าของ (หรือ ADMIN)
       const found = await tx`
-        SELECT post_id, student_id
-        FROM "Post"
-        WHERE post_id = ${post_id}
-        LIMIT 1
+        SELECT post_id, student_id FROM "Post"
+        WHERE post_id = ${post_id} LIMIT 1
       `;
-
       if (found.length === 0) {
         set.status = 404;
         return { error: "Post not found" };
       }
 
-      const owner_id = found[0].student_id;
-      const isOwner = owner_id === user.student_id;
+      const isOwner = found[0].student_id === user.student_id;
       const isAdmin = user.role === "ADMIN";
-
       if (!isOwner && !isAdmin) {
         set.status = 403;
         return { error: "Forbidden" };
       }
 
-      // 2) Update Post (อย่าลืม updated_at)
-      const updatedPostRows = await tx`
+      // Update Post (ไม่แตะ status)
+      await tx`
         UPDATE "Post"
-        SET
-          title = ${title},
-          description = ${description},
-          status = ${status},
-          updated_at = NOW()
+        SET title = ${title}, description = ${description ?? null}, updated_at = NOW()
         WHERE post_id = ${post_id}
-        RETURNING post_id, student_id, title, description, status, created_at, updated_at
       `;
-      const updatedPost = updatedPostRows[0];
 
-      // 3) Update category: ลบของเก่าแล้วใส่ใหม่ (รองรับ 1 category ต่อโพสต์)
+      // Update category
       await tx`DELETE FROM "post_category" WHERE post_id = ${post_id}`;
       await tx`
         INSERT INTO "post_category"(category_id, post_id)
-        VALUES (${category_id}, ${post_id})
+        VALUES (${Number(category_id)}, ${post_id})
       `;
 
-      // 4) Replace images: ลบรูปเก่าแล้วใส่ใหม่
+      // ✅ Replace images — ลบเก่า insert ใหม่ด้วย url + public_id
       await tx`DELETE FROM "post_image" WHERE post_id = ${post_id}`;
-      for (const url of image_urls) {
+      for (const img of image_data) {
         await tx`
-          INSERT INTO "post_image"(post_id, image_url)
-          VALUES (${post_id}, ${url})
-        `;
+  INSERT INTO "post_image"(post_id, image_url, public_id)
+  VALUES (${post_id}, ${img.url}, ${img.public_id || ""})
+`;
       }
 
-      // 5) ดึงข้อมูลกลับมาให้ครบ (category + images)
       const fullRows = await tx`
         SELECT 
-          p.post_id,
-          p.title,
-          p.description,
-          p.status,
-          c.category_id,
-          c.category_name,
+          p.post_id, p.title, p.description, p.status,
+          c.category_id, c.category_name,
           TO_CHAR(
             p.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Bangkok',
             'DD/MM/YYYY HH24:MI:SS'
@@ -259,7 +232,8 @@ export const editPost = async ({ params, body, user, set }: any) => {
             json_agg(
               DISTINCT jsonb_build_object(
                 'image_id', pi.image_id,
-                'image_url', pi.image_url
+                'image_url', pi.image_url,
+                'public_id', pi.public_id
               )
             ) FILTER (WHERE pi.image_id IS NOT NULL),
             '[]'::json
@@ -276,7 +250,6 @@ export const editPost = async ({ params, body, user, set }: any) => {
       return { message: "Post updated successfully!", data: fullRows[0] };
     });
 
-    // ถ้า transaction return error object จากข้างใน
     if (result?.error) return result;
 
     set.status = 200;
@@ -638,11 +611,15 @@ export const getPostById = async ({ params, set }: any) => {
         u.first_name, u.last_name, u.profile_img,
         c.category_name,
         COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object('image_id', pi.image_id, 'image_url', pi.image_url)
-          ) FILTER (WHERE pi.image_id IS NOT NULL),
-          '[]'
-        ) as images
+  json_agg(
+    DISTINCT jsonb_build_object(
+      'image_id', pi.image_id,
+      'image_url', pi.image_url,
+      'public_id', pi.public_id    // ← เพิ่มบรรทัดนี้
+    )
+  ) FILTER (WHERE pi.image_id IS NOT NULL),
+  '[]'
+) as images
       FROM "Post" p
       JOIN "User" u ON u.student_id = p.student_id
       LEFT JOIN "post_category" pc ON pc.post_id = p.post_id

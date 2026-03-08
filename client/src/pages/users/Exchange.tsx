@@ -1,3 +1,6 @@
+// แทนที่ทั้งไฟล์ ExchangePage.tsx
+// เปลี่ยน API call จาก PUT → DELETE และลบ card ออกจาก state ทันที
+
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -52,8 +55,12 @@ const requesterConfirm = (token: string, id: number) =>
     {},
     { headers: { Authorization: `Bearer ${token}` } },
   );
+// ✅ DELETE แทน PUT
+const cancelExchange = (token: string, id: number) =>
+  axios.delete(`${API}/exchanges/${id}/cancel`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-// ---- swal helper ----
 const toast = (title: string, icon: "success" | "error" | "warning") =>
   Swal.fire({
     toast: true,
@@ -96,11 +103,9 @@ const STATUS_CONFIG: Record<
   },
 };
 
-// ---- Main Page ----
 const ExchangePage = () => {
   const token = useTestStore((s) => s.token);
   const navigate = useNavigate();
-
   const [received, setReceived] = useState<any[]>([]);
   const [sent, setSent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,8 +119,13 @@ const ExchangePage = () => {
         getReceivedRequests(token),
         getSentRequests(token),
       ]);
-      setReceived(r.data.data || []);
-      setSent(s.data.data || []);
+
+      // ✅ filter เฉพาะ active — COMPLETED / REJECTED / CANCELED ซ่อนหมด
+      const activeOnly = (list: any[]) =>
+        list.filter((e) => e.status === "PENDING" || e.status === "ACCEPTED");
+
+      setReceived(activeOnly(r.data.data || []));
+      setSent(activeOnly(s.data.data || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -139,27 +149,45 @@ const ExchangePage = () => {
     }
   };
 
+  // ✅ ลบ card ออกจาก state ทันที ไม่ต้อง refetch
+  const handleCancel = async (ex: any) => {
+    const result = await Swal.fire({
+      title: "ยกเลิกคำขอแลก?",
+      text: `ยกเลิกการขอแลกโพสต์ "${ex.post_title}"`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#FF5800",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "ใช่ ยกเลิกเลย",
+      cancelButtonText: "ไม่ยกเลิก",
+    });
+    if (!result.isConfirmed) return;
+
+    setActionLoading(ex.exchange_id);
+    try {
+      await cancelExchange(token, ex.exchange_id);
+      // ลบ card ออกจาก state ทันที
+      setSent((prev) => prev.filter((e) => e.exchange_id !== ex.exchange_id));
+      toast("ยกเลิกคำขอแลกแล้ว", "success");
+    } catch (err: any) {
+      toast(err?.response?.data?.error || "เกิดข้อผิดพลาด", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const goToChat = async (ex: any) => {
     try {
-      console.log(ex);
-
       if (ex.chat_id) {
-        // มีห้องอยู่แล้ว → ทั้ง buyer และ seller ไปได้เลย
         navigate(`/user/chat/${ex.chat_id}`);
         return;
       }
-
-      // ยังไม่มีห้อง → ต้องสร้าง
-      // buyer สร้างได้ปกติ, seller สร้างไม่ได้ (will 400)
-      // แก้โดยดูว่า currentUser เป็น buyer หรือ seller
       const currentUser = useTestStore.getState().user;
       const isBuyer = currentUser?.student_id === ex.requester_id;
-
       if (isBuyer) {
         const res = await createChat(token, ex.post_id);
         navigate(`/user/chat/${res.data.data.chat_id}`);
       } else {
-        // seller — ยังไม่มีห้อง แปลว่า buyer ยังไม่เคยแชทมาก่อน
         Swal.fire({
           toast: true,
           position: "bottom",
@@ -169,7 +197,7 @@ const ExchangePage = () => {
           title: "รอให้ผู้ขอแลกเปิดแชทก่อนนะครับ",
         });
       }
-    } catch (err: any) {
+    } catch {
       Swal.fire({
         toast: true,
         position: "bottom",
@@ -283,6 +311,7 @@ const ExchangePage = () => {
                       await requesterConfirm(token, ex.exchange_id);
                     }, "ยืนยันแล้ว รอคู่สนทนายืนยันด้วย")
                   }
+                  onCancel={() => handleCancel(ex)}
                   onChat={() => goToChat(ex)}
                   actionLoading={actionLoading === ex.exchange_id}
                 />
@@ -301,6 +330,7 @@ const ExchangeCard = ({
   onAccept,
   onReject,
   onConfirm,
+  onCancel,
   onChat,
   actionLoading,
 }: any) => {
@@ -309,7 +339,6 @@ const ExchangeCard = ({
     role === "owner"
       ? `${ex.requester_first_name} ${ex.requester_last_name}`
       : `${ex.owner_first_name} ${ex.owner_last_name}`;
-
 
   const showOwnerConfirm =
     role === "owner" && ex.status === "ACCEPTED" && !ex.owner_confirm;
@@ -324,6 +353,7 @@ const ExchangeCard = ({
       ex.status === "ACCEPTED" &&
       ex.receiver_confirm &&
       !ex.owner_confirm);
+  const canCancel = role === "requester" && ex.status === "PENDING";
 
   return (
     <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
@@ -346,7 +376,8 @@ const ExchangeCard = ({
             </p>
             <p className="text-lg font-black text-gray-900">{partnerName}</p>
             <p className="text-sm text-gray-500 mt-0.5">
-              โพสต์: <span className="font-bold text-gray-700">{ex.post_title}</span>
+              โพสต์:{" "}
+              <span className="font-bold text-gray-700">{ex.post_title}</span>
             </p>
           </div>
           <Badge
@@ -417,7 +448,7 @@ const ExchangeCard = ({
                 <Loader2 size={14} className="animate-spin" />
               ) : (
                 <CheckCircle2 size={14} />
-              )}
+              )}{" "}
               ฉันได้รับของแล้ว
             </Button>
           )}
@@ -426,6 +457,23 @@ const ExchangeCard = ({
             <span className="text-xs text-gray-400 font-bold flex items-center gap-1">
               <Clock size={13} /> รอคู่สนทนายืนยัน...
             </span>
+          )}
+
+          {canCancel && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onCancel}
+              disabled={actionLoading}
+              className="rounded-xl gap-1.5 font-bold border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 ml-auto"
+            >
+              {actionLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <XCircle size={14} />
+              )}{" "}
+              ยกเลิกคำขอ
+            </Button>
           )}
         </div>
       </div>

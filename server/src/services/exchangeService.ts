@@ -37,9 +37,12 @@ export class ExchangeService {
 
       if (existingActive.length > 0) {
         const st = existingActive[0].status;
-        if (st === "PENDING") throw new Error("You already have a pending request");
-        if (st === "ACCEPTED") throw new Error("You already have an accepted request for this post");
-        if (st === "COMPLETED") throw new Error("This exchange is already completed");
+        if (st === "PENDING")
+          throw new Error("You already have a pending request");
+        if (st === "ACCEPTED")
+          throw new Error("You already have an accepted request for this post");
+        if (st === "COMPLETED")
+          throw new Error("This exchange is already completed");
       }
       const exchange = await tx`
         INSERT INTO "exchange" (post_id, requester_id, owner_id, status, created_at, updated_at)
@@ -208,7 +211,8 @@ export class ExchangeService {
       }
 
       const updated =
-        await tx`UPDATE "exchange" SET status = 'REJECTED' WHERE exchange_id = ${exchangeId} RETURNING *`;
+        // เปลี่ยนกลับจาก DELETE เป็น UPDATE
+        await tx`UPDATE "exchange" SET status = 'REJECTED', updated_at = NOW() WHERE exchange_id = ${exchangeId}`;
       const nRej = await notificationService.createNotification(
         tx,
         found.requester_id,
@@ -265,10 +269,13 @@ export class ExchangeService {
     ORDER BY e.created_at DESC
   `;
   }
+  // แทนที่ method cancelRequest ใน ExchangeService
+
   async cancelRequest(exchangeId: number, requesterId: number) {
-  return await sql.begin(async (tx: any) => {
-    const found = (
-      await tx`
+    return await sql.begin(async (tx: any) => {
+      // ✅ SELECT ก่อน เช็คว่ามีและ status === PENDING
+      const found = (
+        await tx`
         SELECT e.*, p.title
         FROM "exchange" e
         JOIN "Post" p ON e.post_id = p.post_id
@@ -276,38 +283,34 @@ export class ExchangeService {
           AND e.requester_id = ${requesterId}
         LIMIT 1
       `
-    )[0];
+      )[0];
 
-    if (!found) {
-      throw new Error("Exchange request not found");
-    }
+      if (!found) throw new Error("Exchange request not found");
+      if (found.status !== "PENDING")
+        throw new Error("You can only cancel a pending request");
 
-    if (found.status !== "PENDING") {
-      throw new Error("You can only cancel a pending request");
-    }
-
-    const updated = (
-      await tx`
+      // ✅ แล้วค่อย UPDATE เป็น CANCELED
+      const updated = (
+        await tx`
         UPDATE "exchange"
         SET status = 'CANCELED', updated_at = NOW()
         WHERE exchange_id = ${exchangeId}
         RETURNING *
       `
-    )[0];
+      )[0];
 
-    // แจ้ง owner
-    const noti = await notificationService.createNotification(
-      tx,
-      found.owner_id,
-      "EXCHANGE_CANCELED",
-      `ผู้ขอแลกได้ยกเลิกคำขอสำหรับโพสต์: ${found.title}`,
-      String(exchangeId)
-    );
-    this.publishNoti(found.owner_id, noti);
+      const noti = await notificationService.createNotification(
+        tx,
+        found.owner_id,
+        "EXCHANGE_CANCELED",
+        `ผู้ขอแลกได้ยกเลิกคำขอสำหรับโพสต์: ${found.title}`,
+        String(exchangeId),
+      );
+      this.publishNoti(found.owner_id, noti);
 
-    return updated;
-  });
-}
+      return updated;
+    });
+  }
 }
 
 export const exchangeService = new ExchangeService();

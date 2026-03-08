@@ -101,7 +101,6 @@ const Navbar = () => {
       // setHasNewMessage(false);
     };
 
-    // 🚩 รอรับสัญญาณ "refreshNotifications"
     window.addEventListener("refreshNotifications", handleRefresh);
 
     return () => {

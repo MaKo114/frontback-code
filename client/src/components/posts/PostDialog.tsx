@@ -132,15 +132,17 @@ const PostDialog = ({
       } else {
         await createPost(token!, postForm);
       }
+
+      onOpenChange(false); // ✅ ปิด dialog ก่อน
       Swal.fire({
         icon: "success",
         title: isEdit ? "แก้ไขสำเร็จ!" : "โพสต์สำเร็จ!",
         timer: 1500,
         showConfirmButton: false,
       });
-      fetchMyPosts();
-      onOpenChange(false);
-    } catch {
+      fetchMyPosts(); // ✅ แล้วค่อย fetch (ไม่ต้อง await)
+    } catch (err) {
+      console.log("error →", err);
       Swal.fire(
         "เกิดข้อผิดพลาด",
         isEdit ? "ไม่สามารถแก้ไขโพสต์ได้" : "ไม่สามารถสร้างโพสต์ได้",

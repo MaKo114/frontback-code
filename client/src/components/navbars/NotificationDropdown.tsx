@@ -15,10 +15,20 @@ interface Props {
 
 const NotificationDropdown = ({ notifications, onRefresh }: Props) => {
   const token = useTestStore((state) => state.token);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;
+  console.log(notifications);
 
+  const handleClick = (n: any) => {
+    // EXCHANGE_* → ไปหน้า exchange
+    if (n.type.startsWith("EXCHANGE_")) {
+      navigate("/user/exchanges");
+      return;
+    }
+    // COMMENT หรืออื่นๆ → ไปโพสต์ (ต้องมี /user/ นำหน้า)
+    navigate(`/user/post/${n.reference_id}`);
+  };
   const handleMarkAll = async () => {
     try {
       await markAllAsReadAPI(token);
@@ -71,7 +81,7 @@ const NotificationDropdown = ({ notifications, onRefresh }: Props) => {
                     ? "bg-orange-50/30 border-l-4 border-l-[#FF5800]"
                     : ""
                 }`}
-                onClick={ ()=> navigate(`post/${n.reference_id}`)}
+                onClick={() => handleClick(n)}
               >
                 <p
                   className={`text-sm leading-snug ${!n.is_read ? "font-bold text-gray-900" : "text-gray-600"}`}
