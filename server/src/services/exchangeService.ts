@@ -24,13 +24,23 @@ export class ExchangeService {
         throw new Error("You cannot request your own post");
 
       // กันซ้ำ
-      const existing = await tx`
-        SELECT exchange_id FROM "exchange" 
-        WHERE post_id = ${postId} AND requester_id = ${requesterId} AND status = 'PENDING'
-      `;
-      if (existing.length > 0)
-        throw new Error("You already have a pending request");
+      const existingActive = await tx`
+  SELECT exchange_id, status
+  FROM "exchange"
+  WHERE post_id = ${postId}
+    AND requester_id = ${requesterId}
+    AND owner_id = ${ownerId}
+    AND status IN ('PENDING','ACCEPTED','COMPLETED')
+  ORDER BY created_at DESC
+  LIMIT 1
+`;
 
+      if (existingActive.length > 0) {
+        const st = existingActive[0].status;
+        if (st === "PENDING") throw new Error("You already have a pending request");
+        if (st === "ACCEPTED") throw new Error("You already have an accepted request for this post");
+        if (st === "COMPLETED") throw new Error("This exchange is already completed");
+      }
       const exchange = await tx`
         INSERT INTO "exchange" (post_id, requester_id, owner_id, status, created_at, updated_at)
         VALUES (${postId}, ${requesterId}, ${ownerId}, 'PENDING', NOW(), NOW())
@@ -255,6 +265,49 @@ export class ExchangeService {
     ORDER BY e.created_at DESC
   `;
   }
+  async cancelRequest(exchangeId: number, requesterId: number) {
+  return await sql.begin(async (tx: any) => {
+    const found = (
+      await tx`
+        SELECT e.*, p.title
+        FROM "exchange" e
+        JOIN "Post" p ON e.post_id = p.post_id
+        WHERE e.exchange_id = ${exchangeId}
+          AND e.requester_id = ${requesterId}
+        LIMIT 1
+      `
+    )[0];
+
+    if (!found) {
+      throw new Error("Exchange request not found");
+    }
+
+    if (found.status !== "PENDING") {
+      throw new Error("You can only cancel a pending request");
+    }
+
+    const updated = (
+      await tx`
+        UPDATE "exchange"
+        SET status = 'CANCELED', updated_at = NOW()
+        WHERE exchange_id = ${exchangeId}
+        RETURNING *
+      `
+    )[0];
+
+    // แจ้ง owner
+    const noti = await notificationService.createNotification(
+      tx,
+      found.owner_id,
+      "EXCHANGE_CANCELED",
+      `ผู้ขอแลกได้ยกเลิกคำขอสำหรับโพสต์: ${found.title}`,
+      String(exchangeId)
+    );
+    this.publishNoti(found.owner_id, noti);
+
+    return updated;
+  });
+}
 }
 
 export const exchangeService = new ExchangeService();

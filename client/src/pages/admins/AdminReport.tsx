@@ -12,7 +12,9 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  Edit,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Report {
   report_id: number;
@@ -64,8 +66,8 @@ const AdminReport = () => {
         });
         setReports((prev) =>
           prev.map((r) =>
-            r.report_id === reportId ? { ...r, status: "RESOLVED" } : r
-          )
+            r.report_id === reportId ? { ...r, status: "RESOLVED" } : r,
+          ),
         );
         Swal.fire({
           title: "สำเร็จ!",
@@ -89,22 +91,25 @@ const AdminReport = () => {
       ? reports
       : reports.filter((r) => r.status === filterStatus);
 
-  useEffect(()=>{
+  useEffect(() => {}, [reports]);
 
-  }, [reports])
-  
-  {/* Pagination Calculation */}
+  {
+    /* Pagination Calculation */
+  }
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentReports = filteredReports.slice(indexOfFirstItem, indexOfLastItem);
+  const currentReports = filteredReports.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
+  );
   const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+
+  const navigate = useNavigate()
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredReports.length]);
-  
-
 
   return (
     <div className="space-y-6 font-['Inter',sans-serif]">
@@ -142,42 +147,48 @@ const AdminReport = () => {
       <div className="bg-white rounded-[24px] shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-8 py-5 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
           <p className="text-xs font-bold text-gray-500">
-            Showing {filteredReports.length > 0 ? indexOfFirstItem + 1:0} to {Math.min(indexOfLastItem, filteredReports.length)} of {filteredReports.length} Reports
+            Showing {filteredReports.length > 0 ? indexOfFirstItem + 1 : 0} to{" "}
+            {Math.min(indexOfLastItem, filteredReports.length)} of{" "}
+            {filteredReports.length} Reports
           </p>
 
           <div className="flex items-center gap-2">
-            { /* ปุ่มถอยหลัง */}
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            {/* ปุ่มถอยหลัง */}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="p-2 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all text-gray-500"
             >
               <ChevronLeft size={16} />
             </button>
 
-            { /* ปุ่มตัวเลขหน้า*/}
+            {/* ปุ่มตัวเลขหน้า*/}
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
-              currentPage === page
-                ? "bg-[#FF5800] text-white shadow-md shadow-[#FF5800]/20"
-                : "text-gray-400 hover:bg-white hover:text-[#FF5800]"
-            }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
+                      currentPage === page
+                        ? "bg-[#FF5800] text-white shadow-md shadow-[#FF5800]/20"
+                        : "text-gray-400 hover:bg-white hover:text-[#FF5800]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ),
+              )}
             </div>
-            { /* ปุ่มไปด้านหน้า */}
+            {/* ปุ่มไปด้านหน้า */}
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages || totalPages === 0}
               className="p-2 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all text-gray-500"
             >
-              <ChevronRight size={16}/>
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -266,14 +277,14 @@ const AdminReport = () => {
                   <td className="px-8 py-6 text-right">
                     {report.status === "PENDING" ? (
                       <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-200 hover:text-gray-700 transition-all shadow-sm" onClick={()=> navigate(`/admin/post/${report.post_id}`)}>
+                          <Edit size={18} />
+                        </button>
                         <button
                           onClick={() => handleDeletePost(report.report_id)}
                           className="p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm"
                         >
                           <Trash2 size={18} />
-                        </button>
-                        <button className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-200 hover:text-gray-700 transition-all shadow-sm">
-                          <MoreHorizontal size={18} />
                         </button>
                       </div>
                     ) : (

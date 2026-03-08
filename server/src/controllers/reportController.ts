@@ -16,7 +16,6 @@ export const createReport = async ({ body, user, set }: any) => {
     const v = strictBody(payload, allowed, required);
     if (!v.ok) {
       set.status = 400;
-      console.log("❌ StrictBody Validation Failed:", v.error); // ดูใน Terminal Server ว่าฟ้องว่าอะไร
       return { error: v.error };
     }
 

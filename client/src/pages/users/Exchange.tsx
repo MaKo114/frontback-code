@@ -142,7 +142,7 @@ const ExchangePage = () => {
   const goToChat = async (ex: any) => {
     try {
       console.log(ex);
-      
+
       if (ex.chat_id) {
         // มีห้องอยู่แล้ว → ทั้ง buyer และ seller ไปได้เลย
         navigate(`/user/chat/${ex.chat_id}`);
@@ -307,8 +307,9 @@ const ExchangeCard = ({
   const s = STATUS_CONFIG[ex.status] || STATUS_CONFIG.PENDING;
   const partnerName =
     role === "owner"
-      ? `${ex.requester_name} ${ex.requester_surname}`
-      : `${ex.owner_name} ${ex.owner_surname}`;
+      ? `${ex.requester_first_name} ${ex.requester_last_name}`
+      : `${ex.owner_first_name} ${ex.owner_last_name}`;
+
 
   const showOwnerConfirm =
     role === "owner" && ex.status === "ACCEPTED" && !ex.owner_confirm;
@@ -345,7 +346,7 @@ const ExchangeCard = ({
             </p>
             <p className="text-lg font-black text-gray-900">{partnerName}</p>
             <p className="text-sm text-gray-500 mt-0.5">
-              โพสต์: <span className="font-bold text-gray-700">{ex.title}</span>
+              โพสต์: <span className="font-bold text-gray-700">{ex.post_title}</span>
             </p>
           </div>
           <Badge

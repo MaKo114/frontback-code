@@ -1,11 +1,13 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "app",
       "dependencies": {
         "@elysiajs/cors": "1.1.1",
         "@elysiajs/jwt": "1.1.0",
+        "@prisma/client": "^6.19.2",
         "bcrypt": "^6.0.0",
         "cloudinary": "^2.5.0",
         "elysia": "1.1.25",
@@ -21,6 +23,8 @@
     "@elysiajs/cors": ["@elysiajs/cors@1.1.1", "", { "peerDependencies": { "elysia": ">= 1.1.0" } }, "sha512-Bl6JSURwbneaJqkq02bd0C/F8StkmU5zoPLpnSncy4DZSU8TDwWPXxmoHqozI3hf1piDaSQ+I21cmpjPlQ8uYQ=="],
 
     "@elysiajs/jwt": ["@elysiajs/jwt@1.1.0", "", { "dependencies": { "jose": "^4.14.4" }, "peerDependencies": { "elysia": ">= 1.1.0" } }, "sha512-0UXNBYdaWtGq10RPupEP9SLtwDqNuyNdUcYov0dJLoIB2H4LoTWsZLcFstEFyKZHHP0QCdL9s/b4U6iy6gdg/g=="],
+
+    "@prisma/client": ["@prisma/client@6.19.2", "", { "peerDependencies": { "prisma": "*", "typescript": ">=5.1.0" }, "optionalPeers": ["prisma", "typescript"] }, "sha512-gR2EMvfK/aTxsuooaDA32D8v+us/8AAet+C3J1cc04SW35FPdZYgLF+iN4NDLUgAaUGTKdAB0CYenu1TAgGdMg=="],
 
     "@prisma/config": ["@prisma/config@6.19.2", "", { "dependencies": { "c12": "3.1.0", "deepmerge-ts": "7.1.5", "effect": "3.18.4", "empathic": "2.0.0" } }, "sha512-kadBGDl+aUswv/zZMk9Mx0C8UZs1kjao8H9/JpI4Wh4SHZaM7zkTwiKn/iFLfRg+XtOAo/Z/c6pAYhijKl0nzQ=="],
 

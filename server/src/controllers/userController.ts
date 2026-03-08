@@ -197,7 +197,9 @@ export const getMe = async ({ user, set }: any) => {
         email, 
         phone_number, 
         profile_img, 
-        cover_img
+        profile_public_id, 
+        cover_img,
+        cover_public_id
       FROM "User"
       WHERE student_id = ${student_id}
       LIMIT 1

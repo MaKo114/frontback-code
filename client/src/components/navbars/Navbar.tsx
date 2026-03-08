@@ -96,8 +96,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleRefresh = () => {
-      console.log("🔔 Navbar received refresh signal");
-      checkNotifications(); // ไปดึงข้อมูลใหม่จาก DB (ซึ่ง is_read ควรเป็น true แล้ว)
+      checkNotifications();
       // หรือจะ force ปิดเองเลยก็ได้เพื่อความเร็ว
       // setHasNewMessage(false);
     };

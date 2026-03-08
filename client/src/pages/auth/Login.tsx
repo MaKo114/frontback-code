@@ -40,21 +40,21 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // const isKmitl = validateKmitlEmail(form.email);
-    // const isAdmin = form.email === "admin@gmail.com";
-    // console.log(isAdmin, form.email);
+    const isKmitl = validateKmitlEmail(form.email);
+    const isAdmin = form.email === "admin@gmail.com";
+    console.log(isAdmin, form.email);
     
 
     // 3. ตรวจสอบ Format อีเมลก่อนยิง API
-    // if (!isKmitl && !isAdmin) {
-    //   Swal.fire({
-    //     icon: "error",
-    //     title: "รูปแบบอีเมลไม่ถูกต้อง",
-    //     text: "กรุณาใช้รูปแบบ: รหัสนักศึกษา@kmitl.ac.th",
-    //     confirmButtonColor: "#FF5800",
-    //   });
-    //   return; // หยุดการทำงาน
-    // }
+    if (!isKmitl && !isAdmin) {
+      Swal.fire({
+        icon: "error",
+        title: "รูปแบบอีเมลไม่ถูกต้อง",
+        text: "กรุณาใช้รูปแบบ: รหัสนักศึกษา@kmitl.ac.th",
+        confirmButtonColor: "#FF5800",
+      });
+      return; // หยุดการทำงาน
+    }
 
     try {
       const res = await actionLogin(form);
