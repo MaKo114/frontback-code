@@ -89,6 +89,7 @@ export const getPostByIdApi = (token: string, post_id: number) => {
   return axios.get(`${API}/posts/${post_id}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
+  
 };
 
 export const editPostAPI = (token: string, post_id: number, data: any) => {

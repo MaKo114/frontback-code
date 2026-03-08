@@ -4,7 +4,6 @@ import sql from "../../db";
 export class ReportService {
   private server: any;
 
-  // 🚩 เอา server กลับมาเพื่อใช้ publish
   setServer(server: any) {
     this.server = server;
   }
@@ -35,7 +34,6 @@ export class ReportService {
         RETURNING *
       `;
 
-      // 🚩 5. แจ้ง Admin แบบ Real-time (ไม่สร้าง Noti ลง DB แต่ยิงผ่านท่อ WS)
       const admins =
         await tx`SELECT student_id FROM "User" WHERE role = 'ADMIN'`;
 
@@ -45,15 +43,37 @@ export class ReportService {
           this.server.server.publish(
             `user-${admin.student_id}`,
             JSON.stringify({
-              type: "REFRESH_REPORT_COUNT", // 🚩 หัวข้อข่าวสำหรับ Admin
+              type: "REFRESH_REPORT_COUNT", 
               data: { report_id: report[0].report_id },
             }),
           );
         }
       }
 
-      console.log(`📌 Report recorded and signaled to ${admins.length} admins`);
       return report[0];
+    });
+  }
+  async ignoreReport(reportId: number) {
+    return await sql.begin(async (tx: any) => {
+      // 1. ตรวจสอบว่ามี Report อยู่จริงและยังเป็น PENDING
+      const report = await tx`
+        SELECT report_id, status FROM "report" 
+        WHERE report_id = ${reportId} LIMIT 1
+      `;
+
+      if (report.length === 0) throw new Error("Report not found");
+      if (report[0].status !== "PENDING")
+        throw new Error("Report already processed");
+
+      // 2. อัปเดตสถานะเป็น IGNORED
+      const updated = await tx`
+        UPDATE "report" 
+        SET status = 'IGNORED'
+        WHERE report_id = ${reportId}
+        RETURNING *
+      `;
+
+      return updated[0];
     });
   }
 }

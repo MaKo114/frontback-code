@@ -181,7 +181,6 @@ const Register = () => {
                 placeholder="08X-XXX-XXXX"
                 type="text"
                 name="phone_number"
-                required
                 onChange={handleOnChange}
               />
             </div>

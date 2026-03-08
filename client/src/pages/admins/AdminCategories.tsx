@@ -18,6 +18,7 @@ const AdminCategories = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
 
+  
   useEffect(() => {
     fetchCategories();
   }, []);

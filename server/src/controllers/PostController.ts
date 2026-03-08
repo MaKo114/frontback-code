@@ -615,7 +615,7 @@ export const getPostById = async ({ params, set }: any) => {
     DISTINCT jsonb_build_object(
       'image_id', pi.image_id,
       'image_url', pi.image_url,
-      'public_id', pi.public_id    // ← เพิ่มบรรทัดนี้
+      'public_id', pi.public_id
     )
   ) FILTER (WHERE pi.image_id IS NOT NULL),
   '[]'
@@ -634,6 +634,7 @@ export const getPostById = async ({ params, set }: any) => {
       set.status = 404;
       return { error: "Post not found" };
     }
+    
     return { data: rows[0] };
   } catch (err: any) {
     set.status = 500;

@@ -46,7 +46,6 @@ export class FavoriteService {
               data: noti,
             }),
           );
-          console.log(`✅ Published to user-${post.student_id}`); // ลองใส่ Log เช็คที่ Terminal
         } else {
           console.log("❌ Server instance not found in Service");
         }

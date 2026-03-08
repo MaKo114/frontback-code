@@ -24,7 +24,7 @@ import {
   resolveReport,
 } from "../controllers/adminController";
 import {search} from "../controllers/searchController";
-import { createReport } from "../controllers/reportController";
+import { createReport, ignoreReport } from "../controllers/reportController";
 import { deleteNotification, getNotifications, getUnreadCount, markAllAsRead, markAsRead, markChatAsRead } from "../controllers/notificationController";
 import {createOrGetChatRoom,getMyChatRooms,getMessagesByRoom,sendMessage,} from "../controllers/chatController";
 import { addFavorite, checkIsFavorite, getMyFavorites, removeFavorite,getPostFavoriteCount } from "../controllers/favoriteController";
@@ -117,6 +117,7 @@ useRoutes.delete("/admin/delete-post/:post_id", adminDeletePost, { beforeHandle:
 // admin and report
 useRoutes.get("/admin/reports", getAllReports, { beforeHandle: [authCheck, adminCheck] });
 useRoutes.get("/admin/reports/:report_id", getReportDetails, { beforeHandle: [authCheck, adminCheck] });
+useRoutes.patch("/admin/reports/:id/ignore", ignoreReport, {beforeHandle: [authCheck, adminCheck]})
 useRoutes.delete("/admin/reports/:report_id", resolveReport, { beforeHandle: [authCheck, adminCheck] });
 
 // favorite

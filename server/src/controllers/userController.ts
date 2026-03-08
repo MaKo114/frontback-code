@@ -177,8 +177,7 @@ export const deleteUserById = async ({ params, set }: any) => {
   }
 };
 
-// ดึงข้อมูลตัวเอง (me)
-// ดึงข้อมูลตัวเอง (me) - ใช้ Raw SQL
+
 export const getMe = async ({ user, set }: any) => {
   try {
     // user.student_id ได้มาจาก Middleware (ถอดจาก Token)

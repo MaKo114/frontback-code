@@ -16,7 +16,7 @@ reportService.setServer(app);
 app.use(
   cors({
     origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
     credentials: true,
   }),
 );
@@ -55,7 +55,6 @@ app.ws("/ws/notifications/:student_id", {
   async open(ws) {
     const { student_id } = ws.data.params;
     ws.subscribe(`user-${student_id}`);
-    // console.log(`🔔 User ${student_id} is watching notifications`);
   },
   close(ws) {
     const { student_id } = ws.data.params;

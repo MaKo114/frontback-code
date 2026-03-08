@@ -8,8 +8,8 @@ export const register = async ({ body, set }: any) => {
       "last_name",
       "password",
       "phone_number",
-      "birth_date", // ต้องตรงกับที่ส่งมาจากหน้าบ้าน
-      "confirmPassword", // ถ้าหน้าบ้านส่งมา ต้องยอมให้ผ่าน หรือไปลบออกที่หน้าบ้าน
+      "birth_date", 
+      "confirmPassword",
     ];
 
     const required = ["email", "first_name", "last_name", "password"]; // ฟิลด์ที่ห้ามว่าง
@@ -22,6 +22,8 @@ export const register = async ({ body, set }: any) => {
 
     const { email, first_name, last_name, password, birth_date, phone_number } =
       body;
+
+      
 
     const foundEmail = await sql`
       SELECT student_id FROM "User"

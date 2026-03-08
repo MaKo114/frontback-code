@@ -325,13 +325,6 @@ export const sendMessage = async ({ params, body, user, set }: any) => {
         SET last_message_at = ${msg.created_at}
         WHERE chat_id = ${chat_id}
       `;
-      // await notificationService.createNotification(
-      //   tx,
-      //   receiverId,
-      //   "CHAT_MESSAGE", // Type ใหม่สำหรับข้อความ
-      //   `คุณได้รับข้อความใหม่จาก ${user.first_name}`,
-      //   String(chat_id),
-      // );
 
       return msg;
     });

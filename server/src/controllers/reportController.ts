@@ -8,7 +8,7 @@ export const createReport = async ({ body, user, set }: any) => {
       return { error: "Please login first" };
     }
 
-    const payload = typeof body === "string" ? JSON.parse(body) : body;
+    const payload = typeof body === "string" ? JSON.parse(body) : body; 
 
     const allowed = ["post_id", "reason", "description"];
     const required = ["post_id", "reason"];
@@ -21,7 +21,6 @@ export const createReport = async ({ body, user, set }: any) => {
 
     const { post_id, reason, description } = payload;
 
-    // 🚩 แปลงเป็น Number ให้ชัวร์ก่อนส่งเข้า Service
     const report = await reportService.createReport(
       user.student_id,
       Number(post_id),
@@ -33,7 +32,36 @@ export const createReport = async ({ body, user, set }: any) => {
     return { message: "Post reported successfully", data: report };
   } catch (err: any) {
     set.status = 400;
-    console.error("❌ Controller Error:", err.message);
+    console.error("Controller Error:", err.message);
+    return { error: err.message };
+  }
+};
+
+export const ignoreReport = async ({ params, user, set }: any) => {
+  try {
+    // 1. Check Admin Permission
+    if (!user || user.role !== "ADMIN") {
+      set.status = 403;
+      return { error: "Forbidden: Admin access only" };
+    }
+
+    const { id } = params;
+    if (!id) {
+      set.status = 400;
+      return { error: "Report ID is required" };
+    }
+
+    // 2. Call Service
+    const result = await reportService.ignoreReport(Number(id));
+
+    set.status = 200;
+    return { 
+      message: "Report ignored successfully", 
+      data: result 
+    };
+  } catch (err: any) {
+    set.status = 400;
+    console.error("❌ Ignore Report Error:", err.message);
     return { error: err.message };
   }
 };

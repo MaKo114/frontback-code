@@ -100,7 +100,7 @@ model Report {
   post_id     Int
   reporter_id Int
   created_at  DateTime     @default(now())
-  description String
+  description String?
   reason      String
   status      reportStatus @default(PENDING)
   post        Post         @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
@@ -199,6 +199,7 @@ enum UserStatus {
 enum reportStatus {
   PENDING
   RESOLVE
+  IGNORED
 }
 
 enum PostStatus {

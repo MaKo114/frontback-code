@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import useTestStore from "@/store/tokStore";
-import { markAllAsReadAPI } from "@/api/notification";
+import { markAllAsReadAPI, markAsReadAPI } from "@/api/notification";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -18,17 +18,28 @@ const NotificationDropdown = ({ notifications, onRefresh }: Props) => {
   const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n: any) => !n.is_read).length;
-  console.log(notifications);
 
-  const handleClick = (n: any) => {
-    // EXCHANGE_* → ไปหน้า exchange
-    if (n.type.startsWith("EXCHANGE_")) {
-      navigate("/user/exchanges");
-      return;
+  const handleOnClick = async (n: any) => {
+
+    if (!n.is_read) {
+      await markAsReadAPI(token, n.notification_id);
+      onRefresh();
     }
-    // COMMENT หรืออื่นๆ → ไปโพสต์ (ต้องมี /user/ นำหน้า)
-    navigate(`/user/post/${n.reference_id}`);
+
+    const exchangeTypes = [
+      "EXCHANGE_REQUEST",
+      "EXCHANGE_ACCEPTED",
+      "EXCHANGE_OWNER_CONFIRMED",
+      "EXCHANGE_COMPLETED",
+    ];
+
+    if (exchangeTypes.includes(n.type)) {
+      navigate(`/user/exchanges`);
+    } else if (n.type === "NEW_FAVORITE" || n.type === "NEW_COMMENT") {
+      navigate(`/user/post/${n.reference_id}`);
+    } 
   };
+
   const handleMarkAll = async () => {
     try {
       await markAllAsReadAPI(token);
@@ -71,17 +82,17 @@ const NotificationDropdown = ({ notifications, onRefresh }: Props) => {
           )}
         </div>
 
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[400px] overflow-y-auto ">
           {notifications.length > 0 ? (
             notifications.map((n: any) => (
               <div
                 key={n.notification_id}
-                className={`p-4 border-b border-gray-50 hover:bg-orange-50/50 cursor-pointer transition-colors ${
+                className={`p-4 border-b border-gray-50  hover:bg-orange-50/50 cursor-pointer transition-colors ${
                   !n.is_read
                     ? "bg-orange-50/30 border-l-4 border-l-[#FF5800]"
                     : ""
                 }`}
-                onClick={() => handleClick(n)}
+                onClick={() => handleOnClick(n)}
               >
                 <p
                   className={`text-sm leading-snug ${!n.is_read ? "font-bold text-gray-900" : "text-gray-600"}`}

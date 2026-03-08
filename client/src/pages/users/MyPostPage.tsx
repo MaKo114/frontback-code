@@ -11,6 +11,7 @@ import {
   Heart,
   MessageCircle,
   X,
+  Pen,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -228,6 +229,8 @@ const PostCard = ({ post, onDelete, onImageClick, onCommentClick }: any) => {
   const [commentCount, setCommentCount] = useState(0);
   const images = post.images || [];
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   // ดึง fav + comment count ของโพสต์นี้
   useEffect(() => {
     const load = async () => {
@@ -324,12 +327,36 @@ const PostCard = ({ post, onDelete, onImageClick, onCommentClick }: any) => {
           >
             {post.category_name || "ทั่วไป"}
           </Badge>
-          <button
-            onClick={onDelete}
-            className="text-gray-300 hover:text-red-500 transition-colors shrink-0"
-          >
-            <Trash2 size={16} />
-          </button>
+
+          <div className="space-x-4">
+            {/* 🚩 ปุ่มแก้ไข */}
+            <button
+              onClick={() => setIsEditOpen(true)} // เปิด Dialog
+              className="text-gray-300 hover:text-blue-500 transition-colors shrink-0"
+            >
+              <Pen size={16} />
+            </button>
+
+            <PostDialog
+              open={isEditOpen}
+              onOpenChange={setIsEditOpen}
+              mode="edit"
+              initialData={{
+                post_id: post.post_id,
+                title: post.title,
+                description: post.description,
+                category_id: post.category_id,
+                images: post.images, // ส่ง array รูปเดิมเข้าไปแสดง
+              }}
+            />
+            
+            <button
+              onClick={onDelete}
+              className="text-gray-300 hover:text-red-500 transition-colors shrink-0"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
 
         <h3 className="font-bold text-gray-900 line-clamp-1 mb-4">
@@ -363,7 +390,6 @@ const PostCard = ({ post, onDelete, onImageClick, onCommentClick }: any) => {
           </div>
           <span className="text-[10px] font-bold text-gray-300">
             {`${post.created_at_th}`}
-    
           </span>
         </div>
       </div>

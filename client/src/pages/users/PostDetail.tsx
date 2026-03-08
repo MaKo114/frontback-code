@@ -28,6 +28,7 @@ const PostDetailPage = () => {
   const token = useTestStore((state) => state.token);
   const currentUser = useTestStore((state) => state.user);
   // const userFullInfo = useTestStore((state) => state.userInformation);
+  
 
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,6 @@ const PostDetailPage = () => {
   const [favCount, setFavCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [selectedImg, setSelectedImg] = useState<string | null>(null);
-  // console.log(user);
 
   useEffect(() => {
     if (post_id) {
@@ -47,6 +47,7 @@ const PostDetailPage = () => {
   const fetchPost = async () => {
     try {
       const res = await getPostByIdApi(token, Number(post_id));
+      
       setPost(res.data.data || res.data);
     } catch (err) {
       console.error(err);
@@ -141,7 +142,6 @@ const PostDetailPage = () => {
         <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
           <PostDetailHeader
             post={post}
-            // ✅ เช็คจาก currentUser โดยตรง จะแม่นยำกว่า
             isAdmin={currentUser?.role === "ADMIN"}
             onDelete={handleDeletePost}
           />

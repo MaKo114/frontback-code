@@ -102,7 +102,6 @@ export const getCommentsByPost = async ({ params, set }: any) => {
     `;
 
     set.status = 200;
-    // ✅ ส่ง count กลับไปด้วย
     return {
       data: rows,
       count: rows.length,
