@@ -55,11 +55,12 @@ const requesterConfirm = (token: string, id: number) =>
     {},
     { headers: { Authorization: `Bearer ${token}` } },
   );
-// ✅ DELETE แทน PUT
 const cancelExchange = (token: string, id: number) =>
-  axios.delete(`${API}/exchanges/${id}/cancel`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  axios.put(
+    `${API}/exchanges/${id}/cancel`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
 
 const toast = (title: string, icon: "success" | "error" | "warning") =>
   Swal.fire({
@@ -165,7 +166,11 @@ const ExchangePage = () => {
 
     setActionLoading(ex.exchange_id);
     try {
-      await cancelExchange(token, ex.exchange_id);
+      console.log(ex.exchange_id);
+
+      const res = await cancelExchange(token, Number(ex.exchange_id));
+      console.log(res);
+
       // ลบ card ออกจาก state ทันที
       setSent((prev) => prev.filter((e) => e.exchange_id !== ex.exchange_id));
       toast("ยกเลิกคำขอแลกแล้ว", "success");

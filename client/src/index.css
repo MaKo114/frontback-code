@@ -131,6 +131,9 @@
 }
 
 /* เพิ่มในไฟล์ CSS */
+/* html {
+  scrollbar-gutter: stable;
+} */
 
 /* body, html {
   overflow-y: scroll;
@@ -138,3 +141,4 @@
 /* html {
   scrollbar-gutter: stable;
 } */
+

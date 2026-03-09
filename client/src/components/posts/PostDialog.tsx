@@ -154,7 +154,7 @@ const PostDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} >
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] rounded-[28px] p-0 overflow-hidden border-none shadow-2xl flex flex-col">
         <div className="h-1.5 bg-linear-to-r from-[#FFB800] to-[#FF5800] shrink-0" />
 
@@ -172,7 +172,7 @@ const PostDialog = ({
           </DialogHeader>
         </div>
 
-        <div className="px-8 py-2 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="px-8 py-2 overflow-y-auto flex-1 no-scrollbar">
           <div className="space-y-5 pb-4">
             {/* Title */}
             <div className="relative group">
