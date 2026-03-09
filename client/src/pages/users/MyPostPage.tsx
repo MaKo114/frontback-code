@@ -321,12 +321,14 @@ const PostCard = ({ post, onDelete, onImageClick, onCommentClick }: any) => {
       {/* Content */}
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <Badge
-            variant="secondary"
-            className="bg-orange-50 text-[#FF5800] border-none font-bold shrink-0"
-          >
-            {post.category_name || "ทั่วไป"}
-          </Badge>
+          {post.category_name && (
+            <Badge
+              variant="secondary"
+              className="bg-orange-50 text-[#FF5800] border-none font-bold shrink-0"
+            >
+              {post.category_name}
+            </Badge>
+          )}
 
           <div className="space-x-4">
             {/* 🚩 ปุ่มแก้ไข */}

@@ -12,9 +12,11 @@ const PostDetailContent = ({ post, onImageClick }: Props) => {
     <>
       <div className="px-5 pb-3">
         <div className="flex items-center gap-2 mb-2">
-          <span className="bg-orange-50 text-[#FF5800] text-[10px] font-black px-2 py-0.5 rounded uppercase border border-orange-100">
-            {post.category_name}
-          </span>
+          {post.category_name && (
+            <span className="bg-orange-50 text-[#FF5800] text-[10px] font-black px-2 py-0.5 rounded uppercase border border-orange-100">
+              {post.category_name}
+            </span>
+          )}
           <span className="bg-green-50 text-green-600 text-[10px] font-black px-2 py-0.5 rounded uppercase border border-green-100">
             {post.status}
           </span>

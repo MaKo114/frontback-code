@@ -99,6 +99,8 @@ export const getMyPosts = async ({ user, set }: any) => {
   p.title,
   p.description,
   p.status,
+  c.category_id,
+  c.category_name,
 
   TO_CHAR(
     p.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Bangkok',
@@ -122,6 +124,8 @@ export const getMyPosts = async ({ user, set }: any) => {
 
 FROM "Post" p
 JOIN "User" u ON u.student_id = p.student_id
+LEFT JOIN "post_category" pc ON pc.post_id = p.post_id
+LEFT JOIN "Category" c ON c.category_id = pc.category_id
 WHERE p.student_id = ${user.student_id}
 ORDER BY p.created_at DESC
     `;

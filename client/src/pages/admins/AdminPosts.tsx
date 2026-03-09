@@ -174,9 +174,11 @@ const AdminPosts = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-black">
-                        {post.category_name}
-                      </span>
+                      {post.category_name && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-black">
+                          {post.category_name}
+                        </span>
+                      )}
                     </td>
                     <td className="px-8 py-6">
                       <div className="text-sm text-gray-500 font-medium">
