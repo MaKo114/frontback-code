@@ -135,7 +135,7 @@ useRoutes.get("/exchanges/received", getMyReceivedRequests, { beforeHandle: auth
 useRoutes.post("/exchanges/:exchange_id/owner-confirm", ownerConfirmExchange, { beforeHandle: authCheck });
 useRoutes.post("/exchanges/:exchange_id/requester-confirm", requesterConfirmExchange, { beforeHandle: authCheck });
 // cancel กลับเป็น PUT
-  useRoutes.put("/exchanges/:exchange_id/cancel", cancelExchangeRequest, { beforeHandle: authCheck });
+useRoutes.put("/exchanges/:exchange_id/cancel", cancelExchangeRequest, { beforeHandle: authCheck });
 
 // comments ของ post
 useRoutes.get("/posts/:post_id/comments", getCommentsByPost);

@@ -33,7 +33,7 @@ const router = createBrowserRouter([
     path: "/user",
     element: <ProtectRouteUser element={<LayoutUser />}/>,
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: <HomePage  /> },
       { path: "my-posts", element: <MyPostPage /> },
       { path: "edit-profile", element: <EditProfile /> },
       { path: "chat/:chatId", element: <ChatPage /> },

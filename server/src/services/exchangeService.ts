@@ -269,7 +269,7 @@ export class ExchangeService {
     ORDER BY e.created_at DESC
   `;
   }
-  // แทนที่ method cancelRequest ใน ExchangeService
+ 
 
   async cancelRequest(exchangeId: number, requesterId: number) {
     return await sql.begin(async (tx: any) => {

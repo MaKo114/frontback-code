@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { LogIn, UserPlus, Home } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import NavLink from "../../layouts/NavLink";
 import logo from '../../assets/logo/logo_tokladkrabang.png';
 
 const Navbar1 = () => {
   return (
-    <nav className="sticky top-0 z-[100] w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         
         {/* Logo Section */}
