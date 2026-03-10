@@ -129,7 +129,14 @@
     @apply bg-background text-foreground;
     }
 }
+/* Fix Pop-Up */
+body.swal2-shown {
+  pointer-events: auto !important;
+}
 
+.swal2-container {
+  z-index: 20000 !important;
+}
 /* เพิ่มในไฟล์ CSS */
 /* html {
   scrollbar-gutter: stable;

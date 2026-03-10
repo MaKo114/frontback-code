@@ -122,7 +122,9 @@ const PostDialog = ({
 
   const handleSubmit = async () => {
     if (!postForm.title.trim() || !postForm.category_id) {
-      Swal.fire("ข้อมูลไม่ครบ", "กรุณาระบุชื่อสิ่งของและหมวดหมู่", "warning");
+      Swal.fire("ข้อมูลไม่ครบ", 
+                "กรุณาระบุชื่อสิ่งของและหมวดหมู่", 
+                "warning");
       return;
     }
     try {
@@ -155,7 +157,9 @@ const PostDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} >
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] rounded-[28px] p-0 overflow-hidden border-none shadow-2xl flex flex-col">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] rounded-[28px] p-0 overflow-hidden border-none shadow-2xl flex flex-col"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div className="h-1.5 bg-linear-to-r from-[#FFB800] to-[#FF5800] shrink-0" />
 
         <div className="px-8 pt-8 pb-4 shrink-0">

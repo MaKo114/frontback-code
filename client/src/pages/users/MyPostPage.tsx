@@ -268,6 +268,8 @@ const PostCard = ({ post, onDelete, onImageClick, onCommentClick }: any) => {
       setFavLoading(false);
     }
   };
+  const categories = useTestStore((state) => state.categories); 
+  const categoryName = categories.find((c: any) => c.category_id === post.category_id)?.category_name;
 
   return (
     <div className="rounded-[28px] border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all overflow-hidden">

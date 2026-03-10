@@ -115,11 +115,11 @@ const Navbar = () => {
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => navigate("/user")}
       >
-        <div className="bg-white p-1 rounded-xl shadow-inner">
+        <div className="bg-white rounded-xl shadow-inner">
           <img
             src={logo}
             alt="TokLadkrabang logo"
-            className="w-8 h-8 rounded-lg object-contain"
+            className="w-8 h-8 rounded-lg object-cover mx-auto my-auto block "
           />
         </div>
         <span className="text-xl font-black text-white tracking-tighter">

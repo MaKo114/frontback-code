@@ -1,21 +1,61 @@
 import usePostStore from "@/store/postStore";
 import useTestStore from "@/store/tokStore";
-import { useEffect, useState } from "react";
-import { Hash, Layers } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Hash, Layers, Plus } from "lucide-react";
 
 const CategoriesMenu = () => {
   const fetchPostByCategory = usePostStore((state) => state.fetchPostByCategory);
   const fetchPosts = usePostStore((state) => state.fetchPosts);
   const token = useTestStore((state) => state.token);
 
+  type Category = {
+    category_id:number;
+    category_name:string;
+  };
   const [activeCategory, setActiveCategory] = useState("ทั้งหมด");
+  const [showMore, setShowMore] = useState(false);
+  const [displayCategories, setDisplayCategories] = useState<Category[]>([]);
 
   const fetchCategories = useTestStore((state) => state.fetchCategories);
   const categories = useTestStore((state) => state.categories);
+  
 
   useEffect(() => {
     fetchCategories();
   }, []);
+  useEffect(() => {
+    setDisplayCategories(categories);
+  }, [categories]);
+  
+  const visibleCategories = displayCategories.slice(0,5);
+  const hiddenCategories = displayCategories.slice(5);
+  
+  const handleSelectCate = (cat: Category) => {
+    setActiveCategory(cat.category_name);
+    fetchPostByCategory(cat.category_id);
+    setShowMore(false);
+    
+    setDisplayCategories((prev) => {
+      const filterd = prev.filter((c) => c.category_id !== cat.category_id);
+      return [cat, ...filterd];
+    })
+  };
+
+  const dropdownRef = useRef<HTMLDivElement | null >(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowMore(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  
 
   return (
     <div className="flex flex-col gap-1.5 font-['Inter',sans-serif]">
@@ -43,7 +83,7 @@ const CategoriesMenu = () => {
 
       {/* --- หมวดหมู่จาก API --- */}
       <div className="flex flex-col gap-1">
-        {categories.map((cat) => (
+        {visibleCategories.map((cat) => (
           <button
             key={cat.category_id}
             onClick={() => {
@@ -67,6 +107,35 @@ const CategoriesMenu = () => {
             )}
           </button>
         ))}
+        
+        { /*ปุ่มบวก*/ }
+        {hiddenCategories.length > 0 && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="flex items-center justify-center w-full rounded-xl px-4 py-2 text-gray-400 hover:bg-orange-50 hover:text-[#FF5800] transition"
+            >
+              <Plus size={20} />
+            </button>
+            
+            { /* DropDown */ }
+            {showMore && (
+              <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-xl border bg-white shadow-lg z-10">
+                {hiddenCategories.map((cat) => (
+                  <button
+                    key={cat.category_id}
+                    onClick={() => handleSelectCate(cat)}
+                    className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF5800]"
+                  >
+                    <Hash size={16} />
+                    {cat.category_name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+          </div>
+        )}
       </div>
 
       {/* กรณีไม่มีข้อมูล */}

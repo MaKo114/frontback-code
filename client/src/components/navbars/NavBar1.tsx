@@ -13,7 +13,7 @@ const Navbar1 = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-white shadow-lg shadow-orange-200 transition-transform group-hover:scale-105">
             {/* <Home size={22} strokeWidth={2.5} /> */}
             <img
-              src={logo} className="rounded-xl w-full h-full object-contain mx-auto my-auto block"
+              src={logo} className="rounded-xl w-full h-full object-cover mx-auto my-auto block"
             />
           </div>
           <div className="hidden sm:block">
