@@ -38,6 +38,8 @@ interface PostState {
   fetchMyPosts: () => Promise<void>;
   activeCategoryId: number | null; 
   setActiveCategoryId: (id: number | null) => void;
+  isEditing: boolean;
+  setIsEditing: (status: boolean) => void;
 }
 
 /* ================= STORE ================= */
@@ -47,6 +49,8 @@ const postStore: StateCreator<PostState> = (set) => ({
   myPosts: [],
   activeCategoryId: null,
   setActiveCategoryId: (id) => set({ activeCategoryId: id }),
+  isEditing: false, // 🟢 กำหนดค่าเริ่มต้น
+  setIsEditing: (status) => set({ isEditing: status }),
   /* ===== FETCH ALL ===== */
   fetchPosts: async () => {
     try {

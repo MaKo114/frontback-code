@@ -20,27 +20,30 @@ const HomePage = () => {
   );
 
   useEffect(() => {
-    // ดึงข้อมูลครั้งแรกตามสถานะปัจจุบัน
+    // ดึงข้อมูลครั้งแรก
     if (activeCategoryId) {
       fetchPostByCategory(activeCategoryId);
     } else {
       fetchPosts();
     }
-
     getUserInformation();
 
-    // 2. ตั้ง poll ทุก 10 วินาทีแบบมีเงื่อนไข
+    // ตั้ง poll ทุก 10 วินาที
     const interval = setInterval(() => {
+      // 🟢 ดึงค่า isEditing จาก Store ตรงๆ แบบไม่ผ่าน Hook เพื่อเอาค่าล่าสุดเสมอ
+      const isEditing = usePostStore.getState().isEditing;
+
+      // 🟢 ถ้ากำลังเปิดหน้าต่างแก้ไขโพสต์อยู่ ให้ return ออกไปเลย (ข้ามการดึงข้อมูลรอบนี้)
+      if (isEditing) return;
+
       if (activeCategoryId) {
-        // ถ้ามีหมวดหมู่ที่เลือกอยู่ ให้ดึงแบบแยกหมวด
         fetchPostByCategory(activeCategoryId);
       } else {
-        // ถ้าไม่ได้เลือกอะไรเลย ให้ดึงทั้งหมด
         fetchPosts();
       }
     }, 10000);
 
-    return () => clearInterval(interval); // cleanup
+    return () => clearInterval(interval);
   }, [activeCategoryId]);
 
   const filteredPosts = posts.filter(

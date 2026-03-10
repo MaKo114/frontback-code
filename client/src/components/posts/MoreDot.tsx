@@ -24,6 +24,7 @@ const MoreDot = ({ post }: { post: any }) => {
   const { student_id, post_id } = post;
   const user = useTestStore((state) => state.user);
   const token = useTestStore((state) => state.token);
+  const setIsEditing = usePostStore((state) => state.setIsEditing);
 
   const [alertType, setAlertType] = useState<"success" | "error" | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -95,7 +96,10 @@ const MoreDot = ({ post }: { post: any }) => {
           {isOwner && (
             <DropdownMenuItem
               className="cursor-pointer gap-2 text-gray-600 focus:text-gray-600 focus:bg-blue-50 rounded-lg p-2.5 font-medium"
-              onClick={() => setShowEditDialog(true)}
+              onClick={() => {
+                setShowEditDialog(true);
+                setIsEditing(true); // 🟢 สั่งให้หยุดรีเฟรชตอนกดเปิด
+              }}
             >
               <Pencil size={16} />
               <span>แก้ไขโพสต์</span>
@@ -125,7 +129,10 @@ const MoreDot = ({ post }: { post: any }) => {
       {/* Edit Dialog — reuse PostDialog */}
       <PostDialog
         open={showEditDialog}
-        onOpenChange={setShowEditDialog}
+        onOpenChange={(open) => {
+          setShowEditDialog(open);
+          setIsEditing(open); // 🟢 ตอนปิด (open=false) ระบบจะกลับมารีเฟรชต่อ
+        }}
         mode="edit"
         initialData={{
           post_id,
