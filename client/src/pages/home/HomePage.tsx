@@ -14,18 +14,34 @@ const HomePage = () => {
   const getUserInformation = useTestStore((state) => state.getUserInformation);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-
+  const activeCategoryId = usePostStore((state) => state.activeCategoryId);
+  const fetchPostByCategory = usePostStore(
+    (state) => state.fetchPostByCategory,
+  );
 
   useEffect(() => {
-    fetchPosts();
-    getUserInformation();
-    // poll ทุก 10 วินาที
-    const interval = setInterval(() => {
+    // ดึงข้อมูลครั้งแรกตามสถานะปัจจุบัน
+    if (activeCategoryId) {
+      fetchPostByCategory(activeCategoryId);
+    } else {
       fetchPosts();
+    }
+
+    getUserInformation();
+
+    // 2. ตั้ง poll ทุก 10 วินาทีแบบมีเงื่อนไข
+    const interval = setInterval(() => {
+      if (activeCategoryId) {
+        // ถ้ามีหมวดหมู่ที่เลือกอยู่ ให้ดึงแบบแยกหมวด
+        fetchPostByCategory(activeCategoryId);
+      } else {
+        // ถ้าไม่ได้เลือกอะไรเลย ให้ดึงทั้งหมด
+        fetchPosts();
+      }
     }, 10000);
 
     return () => clearInterval(interval); // cleanup
-  }, []);
+  }, [activeCategoryId]);
 
   const filteredPosts = posts.filter(
     (post: any) =>
@@ -57,7 +73,7 @@ const HomePage = () => {
           </div>
 
           {/* Posts List */}
-          <div className="space-y-6" >
+          <div className="space-y-6">
             {filteredPosts.length > 0 ? (
               filteredPosts.map((post: any) =>
                 post.status === "CLOSED" ? null : (

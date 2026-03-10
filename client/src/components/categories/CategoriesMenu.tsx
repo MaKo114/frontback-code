@@ -6,6 +6,10 @@ import { Hash, Layers, Plus } from "lucide-react";
 const CategoriesMenu = () => {
   const fetchPostByCategory = usePostStore((state) => state.fetchPostByCategory);
   const fetchPosts = usePostStore((state) => state.fetchPosts);
+  
+  // 🟢 1. เพิ่มฟังก์ชัน setActiveCategoryId จาก Store
+  const setActiveCategoryId = usePostStore((state) => state.setActiveCategoryId); 
+  
   const token = useTestStore((state) => state.token);
 
   type Category = {
@@ -19,10 +23,10 @@ const CategoriesMenu = () => {
   const fetchCategories = useTestStore((state) => state.fetchCategories);
   const categories = useTestStore((state) => state.categories);
   
-
   useEffect(() => {
     fetchCategories();
   }, []);
+  
   useEffect(() => {
     setDisplayCategories(categories);
   }, [categories]);
@@ -32,6 +36,9 @@ const CategoriesMenu = () => {
   
   const handleSelectCate = (cat: Category) => {
     setActiveCategory(cat.category_name);
+    // 🟢 2. เซ็ตค่าลง Store เมื่อเลือกหมวดหมู่จาก Dropdown
+    setActiveCategoryId(cat.category_id); 
+    
     fetchPostByCategory(cat.category_id);
     setShowMore(false);
     
@@ -56,13 +63,14 @@ const CategoriesMenu = () => {
     };
   }, []);
   
-
   return (
     <div className="flex flex-col gap-1.5 font-['Inter',sans-serif]">
       {/* --- ปุ่มทั้งหมด --- */}
       <button
         onClick={() => {
           setActiveCategory("ทั้งหมด");
+          // 🟢 3. เคลียร์ค่าใน Store เมื่อกดดูทั้งหมด
+          setActiveCategoryId(null); 
           fetchPosts(token);
         }}
         className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
@@ -88,6 +96,8 @@ const CategoriesMenu = () => {
             key={cat.category_id}
             onClick={() => {
               setActiveCategory(cat.category_name);
+              // 🟢 4. เซ็ตค่าลง Store เมื่อกดเลือกหมวดหมู่ปกติ
+              setActiveCategoryId(cat.category_id); 
               fetchPostByCategory(cat.category_id);
             }}
             className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
