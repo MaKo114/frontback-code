@@ -75,10 +75,8 @@ const Navbar = () => {
 
         // 🚩 เคสที่ 2: มีคนทักแชทมา (เด้งที่ไอคอนแชท)
         if (data.type === "NEW_CHAT_MESSAGE") {
-          console.log("💬 New Chat Message via WS!");
           setHasNewMessage(true);
-          setChatUnreadCount((prev) => prev + 1); // บวกเลขแชทเพิ่ม
-          // พี่สามารถสั่งสั่น หรือเล่นเสียงแจ้งเตือนแชทตรงนี้ได้เลย
+          setChatUnreadCount((prev) => prev + 1); 
         }
 
         if (data.type === "READ_NOTI") {
@@ -97,8 +95,6 @@ const Navbar = () => {
   useEffect(() => {
     const handleRefresh = () => {
       checkNotifications();
-      // หรือจะ force ปิดเองเลยก็ได้เพื่อความเร็ว
-      // setHasNewMessage(false);
     };
 
     window.addEventListener("refreshNotifications", handleRefresh);

@@ -15,52 +15,12 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import axios from "axios";
 import Swal from "sweetalert2";
 import useTestStore from "@/store/tokStore";
 import { useNavigate } from "react-router-dom";
 import { createChat } from "@/api/chat";
+import { acceptExchange, cancelExchange, getReceivedRequests, getSentRequests, ownerConfirm, rejectExchange, requesterConfirm } from "@/api/exchage";
 
-const API = import.meta.env.VITE_API_URL;
-
-const getReceivedRequests = (token: string) =>
-  axios.get(`${API}/exchanges/received`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-const getSentRequests = (token: string) =>
-  axios.get(`${API}/exchanges/sent`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-const acceptExchange = (token: string, id: number) =>
-  axios.put(
-    `${API}/exchanges/${id}/status`,
-    { status: "ACCEPTED" },
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-const rejectExchange = (token: string, id: number) =>
-  axios.put(
-    `${API}/exchanges/${id}/status`,
-    { status: "REJECTED" },
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-const ownerConfirm = (token: string, id: number) =>
-  axios.post(
-    `${API}/exchanges/${id}/owner-confirm`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-const requesterConfirm = (token: string, id: number) =>
-  axios.post(
-    `${API}/exchanges/${id}/requester-confirm`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-const cancelExchange = (token: string, id: number) =>
-  axios.put(
-    `${API}/exchanges/${id}/cancel`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
 
 const toast = (title: string, icon: "success" | "error" | "warning") =>
   Swal.fire({
@@ -166,10 +126,8 @@ const ExchangePage = () => {
 
     setActionLoading(ex.exchange_id);
     try {
-      console.log(ex.exchange_id);
 
       const res = await cancelExchange(token, Number(ex.exchange_id));
-      console.log(res);
 
       // ลบ card ออกจาก state ทันที
       setSent((prev) => prev.filter((e) => e.exchange_id !== ex.exchange_id));
